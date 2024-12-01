@@ -163,7 +163,6 @@ void StereoVision::Update()
 	renderer->AddActor(cameraActorRight);
 	renderer->AddActor(worldAxesActor);
 	mPimpl->mObject.actor->SetPosition(-100,-100,-100);
-	mPimpl->mObject.actor->SetScale(1000);
 	mPimpl->mObject.actor->GetMatrix()->Print(std::cout);
 	renderer->AddActor(mPimpl->mObject.actor);
 	renderer->ResetCamera();
