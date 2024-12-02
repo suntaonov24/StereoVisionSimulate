@@ -1,27 +1,27 @@
-﻿#include "../CameraModel/RenderingCamera.h"
+﻿//#include "../CameraModel/RenderingCamera.h"
+#include "../CalculateImageDepth/CalculateImageDepth.h"
 
 int main(int argc, char** argv)
 {
-	CameraManager manager_l;
-	manager_l.SetCameraPos(0, 0, 0);
-	manager_l.SetBoardSize(50,50);
-	manager_l.SetCameraOrientation(0,0,0);
-	manager_l.SetFocalLength(50);
-	manager_l.SetImageSize(150,150);
-	manager_l.SetClippingRange(0.01,500);
-	manager_l.Update();
-	CameraManager manager_r;
-	manager_r.SetCameraPos(10,0,0);
-	manager_r.SetBoardSize(50,50);
-	manager_r.SetCameraOrientation(0,0,0);
-	manager_r.SetFocalLength(50);
-	manager_r.SetImageSize(150, 150);
-	manager_r.SetClippingRange(0.01, 500);
-	manager_r.Update();
-	StereoVision vision;
-	vision.LoadActor("C:\\VTK\\VTKData-master\\VTKData-master\\Data\\42400-IDGH.stl");
-	vision.SetLeftCamera(&manager_l);
-	vision.SetRightCamera(&manager_r);
-	vision.Update();
+	CalculateImageDepth calculator;
+	calculator.IsDebug(true);
+	calculator.LoadActor("C:\\VTK\\VTKData-master\\VTKData-master\\Data\\42400-IDGH.stl");
+	float cameraLeftPos[] = {0,0,0};
+	float cameraRightPos[] = {0.2,0,0};
+	calculator.SetCameraPos(cameraLeftPos,cameraRightPos);
+	float boardLeftSize[] = {50,50};
+	float boardRightSize[] = {50,50};
+	calculator.SetBoardSize(boardLeftSize,boardRightSize);
+	float cameraLeftOri[] = {0,0,0};
+	float cameraRightOri[] = {0,0,0};
+	calculator.SetCameraOrientation(cameraLeftOri,cameraRightOri);
+	calculator.SetFocalLength(200,200);
+	unsigned int imageLeftSize[] = {512,512 };
+	unsigned int imageRightSize[] = { 512,512 };
+	calculator.SetImageSize(imageLeftSize,imageRightSize);
+	float rangeLeft[] = {0.01,500};
+	float rangeRight[] = {0.01,500};
+	calculator.SetClippingRange(rangeLeft,rangeRight);
+	calculator.Update();
 	return 0;
 }

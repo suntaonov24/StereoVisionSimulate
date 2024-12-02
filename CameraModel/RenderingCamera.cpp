@@ -75,9 +75,13 @@ void StereoVision::SetRightCamera(CameraManager* camera)
 {
 	mRight = camera;
 }
-void StereoVision::GetCameraImageCallBack(void(*func)(unsigned char* imageLeft, CameraParams* paramsLeft, unsigned char* imageRight, CameraParams* paramsRight))
+void StereoVision::RegisterLeftImage(unsigned char* image)
 {
-	mFunc = func;
+	mLeftImage = image;
+}
+void StereoVision::RegisterRightImage(unsigned char* image)
+{
+	mRightImage = image;
 }
 void StereoVision::Update()
 {
@@ -162,7 +166,7 @@ void StereoVision::Update()
 	renderer->AddActor(cameraActorLeft);
 	renderer->AddActor(cameraActorRight);
 	renderer->AddActor(worldAxesActor);
-	mPimpl->mObject.actor->SetPosition(-100,-100,-100);
+	mPimpl->mObject.actor->SetPosition(-132,-85,-200);
 	mPimpl->mObject.actor->GetMatrix()->Print(std::cout);
 	renderer->AddActor(mPimpl->mObject.actor);
 	renderer->ResetCamera();
@@ -189,7 +193,11 @@ void StereoVision::Update()
 	vtkNew<vtkImageLuminance> luminanceRight;
 	luminanceRight->SetInputData(windowImageRight->GetOutput());
 	luminanceRight->Update();
-	if(mFunc!=nullptr)
-		mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft->mParams,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight->mParams);
+	if (mLeftImage != nullptr)
+	{
+		memcpy(mLeftImage,luminanceLeft->GetOutput()->GetScalarPointer(),mLeft->mParams->ImageSize[0]* mLeft->mParams->ImageSize[1]*sizeof(unsigned char));
+	}
+	if (mRightImage != nullptr)
+		memcpy(mRightImage,luminanceRight->GetOutput()->GetScalarPointer(),mRight->mParams->ImageSize[0]*mRight->mParams->ImageSize[1]*sizeof(unsigned char));
 	iren->Start();
 }
