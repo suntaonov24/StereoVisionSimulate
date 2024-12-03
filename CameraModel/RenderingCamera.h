@@ -14,9 +14,9 @@ public:
 	void RegisterLeftImage(unsigned char* image);
 	void RegisterRightImage(unsigned char* image);
 	void Update();
-private:
 	CameraManager* mLeft = nullptr;
 	CameraManager* mRight = nullptr;
+private:
 	unsigned char* mLeftImage = nullptr;
 	unsigned char* mRightImage = nullptr;
 	StereoVisionImpl* mPimpl = nullptr;

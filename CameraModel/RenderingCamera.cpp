@@ -1,4 +1,5 @@
 #include "RenderingCamera.h"
+#include <semaphore>
 #include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkCameraActor.h>
@@ -17,6 +18,9 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkImageLuminance.h>
+#include <vtkCubeSource.h>
+#include <vtkLight.h>
+#include <vtkLightActor.h>
 #include <vtkAutoInit.h>
 VTK_MODULE_INIT(vtkRenderingOpenGL2);
 VTK_MODULE_INIT(vtkInteractionStyle);
@@ -86,6 +90,18 @@ void StereoVision::RegisterRightImage(unsigned char* image)
 void StereoVision::Update()
 {
 	vtkNew<vtkNamedColors> colors;
+	vtkNew<vtkLight> light;
+	light->SetLightTypeToSceneLight();
+	light->SetPosition(-10,-100,-200);
+	light->SetPositional(true);
+	light->SetConeAngle(20);
+	light->SetFocalPoint(60,-200,500);
+	light->SetDiffuseColor(128,128,128);
+	light->SetAmbientColor(128, 128, 128);
+	light->SetSpecularColor(128, 128, 128);
+
+	vtkNew<vtkLightActor> lightActor;
+	lightActor->SetLight(light);
 	vtkNew<vtkCamera> cameraLeft;
 	vtkNew<vtkCameraActor> cameraActorLeft;
 	//Set Left camera parameters
@@ -115,7 +131,21 @@ void StereoVision::Update()
 	vtkNew<vtkRenderer> renderLeft;
 	renWinLeft->AddRenderer(renderLeft);
 	renderLeft->SetActiveCamera(cameraLeft);
+	mPimpl->mObject.actor->SetPosition(-132,-85,-200);
+	vtkNew<vtkCubeSource> cubeSource;
+	cubeSource->SetCenter(0,-100,400);
+	cubeSource->SetXLength(200);
+	cubeSource->SetYLength(200);
+	cubeSource->SetZLength(200);
+	vtkNew<vtkPolyDataMapper> cubeMapper;
+	cubeMapper->SetInputConnection(cubeSource->GetOutputPort());
+	cubeMapper->Update();
+	vtkNew<vtkActor> cubeActor;
+	cubeActor->SetMapper(cubeMapper);
+	cubeActor->AddOrientation(0,0,-2);
 	renderLeft->AddActor(mPimpl->mObject.actor);
+	renderLeft->AddActor(cubeActor);
+	renderLeft->AddViewProp(cubeActor);
 	vtkNew<vtkCamera> cameraRight;
 	vtkNew<vtkCameraActor> cameraActorRight;
 	//Set Right camera parameters
@@ -146,6 +176,8 @@ void StereoVision::Update()
 	renWinRight->AddRenderer(renderRight);
 	renderRight->SetActiveCamera(cameraRight);
 	renderRight->AddActor(mPimpl->mObject.actor);
+	renderRight->AddActor(cubeActor);
+	renderRight->AddViewProp(lightActor);
 	//Renderer world coordinate
 	vtkNew<vtkMatrix4x4> worldMatrix;
 	worldMatrix->Identity();
@@ -166,14 +198,18 @@ void StereoVision::Update()
 	renderer->AddActor(cameraActorLeft);
 	renderer->AddActor(cameraActorRight);
 	renderer->AddActor(worldAxesActor);
-	mPimpl->mObject.actor->SetPosition(-132,-85,-200);
-	mPimpl->mObject.actor->GetMatrix()->Print(std::cout);
+	
 	renderer->AddActor(mPimpl->mObject.actor);
+	renderer->AddActor(cubeActor);
+	renderer->AddViewProp(lightActor);
 	renderer->ResetCamera();
 	renderer->SetBackground(colors->GetColor3d("SlateGray").GetData());
 	renderWindow->Render();
 	renWinLeft->Render();
 	renWinRight->Render();
+	renderer->AddLight(light);
+	renderLeft->AddLight(light);
+	renderRight->AddLight(light);
 	//Get renderer window image
 	vtkNew<vtkWindowToImageFilter> windowImageLeft;
 	windowImageLeft->SetInput(renWinLeft);
@@ -198,6 +234,9 @@ void StereoVision::Update()
 		memcpy(mLeftImage,luminanceLeft->GetOutput()->GetScalarPointer(),mLeft->mParams->ImageSize[0]* mLeft->mParams->ImageSize[1]*sizeof(unsigned char));
 	}
 	if (mRightImage != nullptr)
+	{
 		memcpy(mRightImage,luminanceRight->GetOutput()->GetScalarPointer(),mRight->mParams->ImageSize[0]*mRight->mParams->ImageSize[1]*sizeof(unsigned char));
+	}
+		
 	iren->Start();
 }

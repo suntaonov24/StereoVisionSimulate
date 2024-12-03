@@ -16,8 +16,8 @@ public:
 	void SetClippingRange(float range_l[2],float range_r[2]);
 	void Update();
 private:
-	StereoVision* mStereoVision = nullptr;
 	CameraManager* mLeft = nullptr;
 	CameraManager* mRight = nullptr;
+	StereoVision* mStereoVision = nullptr;
 	bool mDebug = false;
 };

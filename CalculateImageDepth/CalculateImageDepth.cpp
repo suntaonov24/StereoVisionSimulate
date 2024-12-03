@@ -5,6 +5,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/calib3d.hpp>
+#include <thread>
+#include <semaphore>
 
 CalculateImageDepth::CalculateImageDepth()
 {
@@ -82,7 +84,39 @@ void CalculateImageDepth::Update()
 		cv::imshow("left",leftImage);
 		cv::namedWindow("right",cv::WINDOW_FREERATIO);
 		cv::imshow("right",rightImage);
-		cv::waitKey(0);
+		//cv::waitKey(0);
+	}
+	/*float* internalMatrix_l = mStereoVision->mLeft->GetInternalMatrix();
+	float* externalMatrix_l = mStereoVision->mLeft->GetExternalMatrix();
+	float* internalMatrix_r = mStereoVision->mRight->GetInternalMatrix();
+	float* externalMatrix_r = mStereoVision->mRight->GetExternalMatrix();
+	cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
+	cv::Mat internalMatrix_r_(3, 3, CV_32FC1, internalMatrix_r);
+	cv::Mat distCoeffs_1, distCoeffs_r;
+	cv::Mat rotation_l(3,3,CV_32FC1);
+	cv::Mat rotation_r(3,3,CV_32FC1);
+	for (unsigned int i = 0; i < 3; ++i)
+	{
+		for (unsigned int j = 0; j < 3; ++j)
+		{
+			rotation_l.at<float>(i, j) = externalMatrix_l[4 * i + j];
+			rotation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
+		}
+	}
+	rotation_l = rotation_l * rotation_r.inv();
+	cv::Mat translation(1, 3, CV_32FC1);
+	translation.at<float>(0) = externalMatrix_l[3] - externalMatrix_r[3];
+	translation.at<float>(1) = externalMatrix_l[7] - externalMatrix_r[7];
+	translation.at<float>(2) = externalMatrix_l[11] - externalMatrix_r[11];
+	cv::Size imageSize(mStereoVision->mLeft->mParams->ImageSize[0], mStereoVision->mLeft->mParams->ImageSize[1]);
+	cv::Mat R1(3,3,CV_32FC1), R2(3,3,CV_32FC1), P1(3,4,CV_32FC1), P2(3,4,CV_32FC1), Q(4,4,CV_32FC1);
+	try
+	{
+		cv::stereoRectify(internalMatrix_l_,distCoeffs_1 ,internalMatrix_r_,distCoeffs_r, imageSize,rotation_l,translation,R1,R2,P1,P2,Q);
+	}
+	catch (cv::Exception& error)
+	{
+		std::cout << error.what() << std::endl;
 	}
 	cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(128, 15);
 	cv::Mat disparity;
@@ -100,4 +134,6 @@ void CalculateImageDepth::Update()
 		cv::imshow("disparity",disparity);
 		cv::waitKey(0);
 	}
+	cv::Mat reconImage;
+	cv::reprojectImageTo3D(disparity,reconImage,Q);*/
 }
