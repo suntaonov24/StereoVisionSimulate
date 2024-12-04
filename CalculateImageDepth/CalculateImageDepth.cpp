@@ -71,69 +71,89 @@ void CalculateImageDepth::Update()
 {
 	mLeft->Update();
 	mRight->Update();
+	mStereoVision->IsDebug(mDebug);
 	mStereoVision->SetLeftCamera(mLeft);
 	mStereoVision->SetRightCamera(mRight);
-	cv::Mat leftImage(mLeft->mParams->ImageSize[0], mLeft->mParams->ImageSize[1], CV_8UC1);
-	cv::Mat rightImage(mRight->mParams->ImageSize[0], mRight->mParams->ImageSize[1], CV_8UC1);
-	mStereoVision->RegisterLeftImage(leftImage.ptr());
-	mStereoVision->RegisterRightImage(rightImage.ptr());
-	mStereoVision->Update();
-	if (mDebug)
-	{
-		cv::namedWindow("left",cv::WINDOW_FREERATIO);
-		cv::imshow("left",leftImage);
-		cv::namedWindow("right",cv::WINDOW_FREERATIO);
-		cv::imshow("right",rightImage);
-		//cv::waitKey(0);
-	}
-	/*float* internalMatrix_l = mStereoVision->mLeft->GetInternalMatrix();
-	float* externalMatrix_l = mStereoVision->mLeft->GetExternalMatrix();
-	float* internalMatrix_r = mStereoVision->mRight->GetInternalMatrix();
-	float* externalMatrix_r = mStereoVision->mRight->GetExternalMatrix();
-	cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
-	cv::Mat internalMatrix_r_(3, 3, CV_32FC1, internalMatrix_r);
-	cv::Mat distCoeffs_1, distCoeffs_r;
-	cv::Mat rotation_l(3,3,CV_32FC1);
-	cv::Mat rotation_r(3,3,CV_32FC1);
-	for (unsigned int i = 0; i < 3; ++i)
-	{
-		for (unsigned int j = 0; j < 3; ++j)
+	auto function = [](unsigned char* left, CameraManager* leftManager,unsigned char* right, CameraManager* rightManager,bool debug)->void {
+		cv::Mat leftImage(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1], CV_8UC1,left);
+		cv::Mat rightImage(rightManager->mParams->ImageSize[0], rightManager->mParams->ImageSize[1], CV_8UC1,right);
+		if (debug)
 		{
-			rotation_l.at<float>(i, j) = externalMatrix_l[4 * i + j];
-			rotation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
+			cv::namedWindow("left", cv::WINDOW_FREERATIO);
+			cv::imshow("left", leftImage);
+			cv::namedWindow("right", cv::WINDOW_FREERATIO);
+			cv::imshow("right", rightImage);
 		}
-	}
-	rotation_l = rotation_l * rotation_r.inv();
-	cv::Mat translation(1, 3, CV_32FC1);
-	translation.at<float>(0) = externalMatrix_l[3] - externalMatrix_r[3];
-	translation.at<float>(1) = externalMatrix_l[7] - externalMatrix_r[7];
-	translation.at<float>(2) = externalMatrix_l[11] - externalMatrix_r[11];
-	cv::Size imageSize(mStereoVision->mLeft->mParams->ImageSize[0], mStereoVision->mLeft->mParams->ImageSize[1]);
-	cv::Mat R1(3,3,CV_32FC1), R2(3,3,CV_32FC1), P1(3,4,CV_32FC1), P2(3,4,CV_32FC1), Q(4,4,CV_32FC1);
-	try
-	{
-		cv::stereoRectify(internalMatrix_l_,distCoeffs_1 ,internalMatrix_r_,distCoeffs_r, imageSize,rotation_l,translation,R1,R2,P1,P2,Q);
-	}
-	catch (cv::Exception& error)
-	{
-		std::cout << error.what() << std::endl;
-	}
-	cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(128, 15);
-	cv::Mat disparity;
-	try
-	{
-		stereo->compute(leftImage,rightImage,disparity);
-	}
-	catch (cv::Exception& error)
-	{
-		std::cout << error.what() << std::endl;
-	}
-	if (mDebug)
-	{
-		cv::namedWindow("disparity",cv::WINDOW_FREERATIO);
-		cv::imshow("disparity",disparity);
-		cv::waitKey(0);
-	}
-	cv::Mat reconImage;
-	cv::reprojectImageTo3D(disparity,reconImage,Q);*/
+		float* internalMatrix_l = leftManager->GetInternalMatrix();
+		float* externalMatrix_l = leftManager->GetExternalMatrix();
+		float* internalMatrix_r = rightManager->GetInternalMatrix();
+		float* externalMatrix_r = rightManager->GetExternalMatrix();
+		cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
+		cv::Mat internalMatrix_r_(3, 3, CV_32FC1, internalMatrix_r);
+		cv::Mat distCoeffs_l, distCoeffs_r;
+		cv::Mat rotation_l(3, 3, CV_32FC1);
+		cv::Mat rotation_r(3, 3, CV_32FC1);
+		for (unsigned int i = 0; i < 3; ++i)
+		{
+			for (unsigned int j = 0; j < 3; ++j)
+			{
+				rotation_l.at<float>(i, j) = externalMatrix_l[4 * i + j];
+				rotation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
+			}
+		}
+		rotation_l = rotation_l * rotation_r.inv();
+		cv::Mat translation(3, 1, CV_32FC1);
+		translation.at<float>(0) = externalMatrix_l[3] - externalMatrix_r[3];
+		translation.at<float>(1) = externalMatrix_l[7] - externalMatrix_r[7];
+		translation.at<float>(2) = externalMatrix_l[11] - externalMatrix_r[11];
+		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
+		cv::Mat R1(3, 3, CV_32FC1), R2(3, 3, CV_32FC1), P1(3, 4, CV_32FC1), P2(3, 4, CV_32FC1), Q(4, 4, CV_32FC1);
+		try
+		{
+			cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_l, translation, R1, R2, P1, P2, Q);
+		}
+		catch (cv::Exception& error)
+		{
+			std::cout << error.what() << std::endl;
+		}
+		cv::Mat mapLeftx, mapLefty;
+		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
+		cv::Mat mapRightx, mapRighty;
+		cv::initUndistortRectifyMap(internalMatrix_r_, distCoeffs_r, R2, P2, imageSize, CV_32FC1, mapRightx, mapRighty);
+		cv::Mat leftImage_, rightImage_;
+		cv::remap(leftImage, leftImage_, mapLeftx, mapLefty, cv::INTER_LINEAR);
+		cv::remap(rightImage, rightImage_, mapRightx, mapRighty, cv::INTER_LINEAR);
+		if (debug)
+		{
+			cv::namedWindow("rectifiedImageLeft");
+			cv::imshow("rectifiedImageLeft", leftImage_);
+			cv::namedWindow("rectifiedImageRight");
+			cv::imshow("rectifiedImageRight", rightImage_);
+		}
+		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(128, 15);
+		cv::Mat disparity;
+		try
+		{
+			stereo->compute(leftImage_, rightImage_, disparity);
+		}
+		catch (cv::Exception& error)
+		{
+			std::cout << error.what() << std::endl;
+		}
+		if (debug)
+		{
+			cv::namedWindow("disparity", cv::WINDOW_FREERATIO);
+			cv::imshow("disparity", disparity);
+		}
+		cv::Mat reconImage;
+		cv::reprojectImageTo3D(disparity, reconImage, Q);
+		if (debug)
+		{
+			cv::namedWindow("reconstructed image");
+			cv::imshow("reconstructed image", reconImage);
+			cv::waitKey(0);
+		}
+	};
+	mStereoVision->RegisterCallback(function);
+	mStereoVision->Update();
 }

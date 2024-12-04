@@ -6,4 +6,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>PATH=C:\practice\CameraModel\x64\Release;C:\Program Files (x86)\VTK\bin;C:\Libraries\library\x64\vc17\bin;%PATH</LocalDebuggerEnvironment>
   </PropertyGroup>
+  <PropertyGroup>
+    <ShowAllFiles>true</ShowAllFiles>
+  </PropertyGroup>
 </Project>

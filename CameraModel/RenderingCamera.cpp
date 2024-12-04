@@ -40,6 +40,7 @@ public:
 	StereoVisionImpl() {}
 	~StereoVisionImpl() {}
 	ModelObject mObject;
+	bool mDebug = false;
 };
 
 StereoVision::StereoVision()
@@ -52,6 +53,10 @@ StereoVision::~StereoVision()
 	{
 		delete mPimpl;
 	}
+}
+void StereoVision::IsDebug(bool debug)
+{
+	mPimpl->mDebug = debug;
 }
 void StereoVision::LoadActor(const char* path)
 {
@@ -79,13 +84,9 @@ void StereoVision::SetRightCamera(CameraManager* camera)
 {
 	mRight = camera;
 }
-void StereoVision::RegisterLeftImage(unsigned char* image)
+void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right, bool debug))
 {
-	mLeftImage = image;
-}
-void StereoVision::RegisterRightImage(unsigned char* image)
-{
-	mRightImage = image;
+	mFunc = func;
 }
 void StereoVision::Update()
 {
@@ -229,14 +230,9 @@ void StereoVision::Update()
 	vtkNew<vtkImageLuminance> luminanceRight;
 	luminanceRight->SetInputData(windowImageRight->GetOutput());
 	luminanceRight->Update();
-	if (mLeftImage != nullptr)
+	if (mFunc != nullptr)
 	{
-		memcpy(mLeftImage,luminanceLeft->GetOutput()->GetScalarPointer(),mLeft->mParams->ImageSize[0]* mLeft->mParams->ImageSize[1]*sizeof(unsigned char));
+		mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,mPimpl->mDebug);
 	}
-	if (mRightImage != nullptr)
-	{
-		memcpy(mRightImage,luminanceRight->GetOutput()->GetScalarPointer(),mRight->mParams->ImageSize[0]*mRight->mParams->ImageSize[1]*sizeof(unsigned char));
-	}
-		
 	iren->Start();
 }
