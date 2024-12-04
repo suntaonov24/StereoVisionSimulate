@@ -5,8 +5,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/calib3d.hpp>
-#include <thread>
-#include <semaphore>
+#include <vector>
 
 CalculateImageDepth::CalculateImageDepth()
 {
@@ -74,7 +73,7 @@ void CalculateImageDepth::Update()
 	mStereoVision->IsDebug(mDebug);
 	mStereoVision->SetLeftCamera(mLeft);
 	mStereoVision->SetRightCamera(mRight);
-	auto function = [](unsigned char* left, CameraManager* leftManager,unsigned char* right, CameraManager* rightManager,bool debug)->void {
+	auto function = [](unsigned char* left, CameraManager* leftManager,unsigned char* right, CameraManager* rightManager,ReconActor* actor,bool debug)->void {
 		cv::Mat leftImage(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1], CV_8UC1,left);
 		cv::Mat rightImage(rightManager->mParams->ImageSize[0], rightManager->mParams->ImageSize[1], CV_8UC1,right);
 		if (debug)
@@ -153,6 +152,24 @@ void CalculateImageDepth::Update()
 			cv::imshow("reconstructed image", reconImage);
 			cv::waitKey(0);
 		}
+		for (unsigned int r = 0; r < reconImage.rows; ++r)
+		{
+			for (unsigned int c = 0; c < reconImage.cols; ++c)
+			{
+				actor->points->InsertNextPoint(reconImage.at<cv::Vec3f>(r, c)[0], reconImage.at<cv::Vec3f>(r, c)[1], reconImage.at<cv::Vec3f>(r, c)[2]);
+			}
+		}
+		actor->polydata->SetPoints(actor->points);
+		actor->sphere->SetCenter(0, 0, 0);
+		actor->sphere->SetRadius(0.01);
+		actor->glyph3D->SetSourceConnection(actor->sphere->GetOutputPort());
+		actor->glyph3D->SetInputData(actor->polydata);
+		actor->glyph3D->Update();
+		actor->mapper->SetInputConnection(actor->glyph3D->GetOutputPort());
+		actor->actor->SetMapper(actor->mapper);
+		actor->actor->GetProperty()->SetColor(actor->colors->GetColor3d("Salmon").GetData());
+		actor->render->AddActor(actor->actor);
+		actor->renWin->Render();
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();

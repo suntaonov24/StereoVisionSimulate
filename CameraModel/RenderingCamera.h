@@ -1,6 +1,30 @@
 #pragma once
 #include <iostream>
 #include "CameraParams.h"
+#include <vtkPoints.h>
+#include <vtkPointData.h>
+#include <vtkPolyData.h>
+#include <vtkRenderer.h>
+#include <vtkGlyph3D.h>
+#include <vtkActor.h>
+#include <vtkNamedColors.h>
+#include <vtkProperty.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkSphereSource.h>
+#include <vtkRenderWindow.h>
+#include <vtkSmartPointer.h>
+struct ReconActor
+{
+	vtkNew<vtkSphereSource> sphere;
+	vtkNew<vtkPoints> points;
+	vtkNew<vtkPolyData> polydata;
+	vtkNew<vtkGlyph3D> glyph3D;
+	vtkNew<vtkPolyDataMapper> mapper;
+	vtkNew<vtkActor> actor;
+	vtkNew<vtkNamedColors> colors;
+	vtkSmartPointer<vtkRenderer> render;
+	vtkSmartPointer<vtkRenderWindow> renWin;
+};
 class StereoVisionImpl;
 class __EXPORT_API__ StereoVision
 {
@@ -12,11 +36,11 @@ public:
 	void SetLeftCamera(CameraManager* camera);
 	void SetRightCamera(CameraManager* camera);
 	//Registrate call back function for calculating disparity map
-	void RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left,unsigned char* imageRight, CameraManager* right,bool debug));
+	void RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left,unsigned char* imageRight, CameraManager* right,ReconActor* actor,bool debug));
 	void Update();
 	CameraManager* mLeft = nullptr;
 	CameraManager* mRight = nullptr;
 private:
 	StereoVisionImpl* mPimpl = nullptr;
-	void (*mFunc)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right, bool debug) = nullptr;
+	void (*mFunc)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right,ReconActor* actor, bool debug) = nullptr;
 };

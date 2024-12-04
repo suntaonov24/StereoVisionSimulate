@@ -20,6 +20,7 @@
 #include <vtkImageLuminance.h>
 #include <vtkCubeSource.h>
 #include <vtkLight.h>
+#include <vtkVertexGlyphFilter.h>
 #include <vtkLightActor.h>
 #include <vtkAutoInit.h>
 VTK_MODULE_INIT(vtkRenderingOpenGL2);
@@ -40,6 +41,7 @@ public:
 	StereoVisionImpl() {}
 	~StereoVisionImpl() {}
 	ModelObject mObject;
+	ReconActor mReconActor;
 	bool mDebug = false;
 };
 
@@ -84,7 +86,7 @@ void StereoVision::SetRightCamera(CameraManager* camera)
 {
 	mRight = camera;
 }
-void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right, bool debug))
+void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right, ReconActor* actor,bool debug))
 {
 	mFunc = func;
 }
@@ -205,7 +207,9 @@ void StereoVision::Update()
 	renderer->AddViewProp(lightActor);
 	renderer->ResetCamera();
 	renderer->SetBackground(colors->GetColor3d("SlateGray").GetData());
+	mPimpl->mReconActor.render = renderer;
 	renderWindow->Render();
+	mPimpl->mReconActor.renWin = renderWindow;
 	renWinLeft->Render();
 	renWinRight->Render();
 	renderer->AddLight(light);
@@ -232,7 +236,7 @@ void StereoVision::Update()
 	luminanceRight->Update();
 	if (mFunc != nullptr)
 	{
-		mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,mPimpl->mDebug);
+		mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);
 	}
 	iren->Start();
 }
