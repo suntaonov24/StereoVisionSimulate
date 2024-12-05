@@ -1,5 +1,7 @@
 #include "CalculateImageDepth.h"
 #include "../CameraModel/RenderingCamera.h"
+#include <vtkMatrix4x4.h>
+#include <vtkTransform.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -76,12 +78,15 @@ void CalculateImageDepth::Update()
 	auto function = [](unsigned char* left, CameraManager* leftManager,unsigned char* right, CameraManager* rightManager,ReconActor* actor,bool debug)->void {
 		cv::Mat leftImage(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1], CV_8UC1,left);
 		cv::Mat rightImage(rightManager->mParams->ImageSize[0], rightManager->mParams->ImageSize[1], CV_8UC1,right);
+		cv::Mat leftImageFliped, rightImageFliped;
+		cv::flip(leftImage,leftImageFliped,0);
+		cv::flip(rightImage, rightImageFliped,0);
 		if (debug)
 		{
 			cv::namedWindow("left", cv::WINDOW_FREERATIO);
-			cv::imshow("left", leftImage);
+			cv::imshow("left", leftImageFliped);
 			cv::namedWindow("right", cv::WINDOW_FREERATIO);
-			cv::imshow("right", rightImage);
+			cv::imshow("right", rightImageFliped);
 		}
 		float* internalMatrix_l = leftManager->GetInternalMatrix();
 		float* externalMatrix_l = leftManager->GetExternalMatrix();
@@ -120,8 +125,10 @@ void CalculateImageDepth::Update()
 		cv::Mat mapRightx, mapRighty;
 		cv::initUndistortRectifyMap(internalMatrix_r_, distCoeffs_r, R2, P2, imageSize, CV_32FC1, mapRightx, mapRighty);
 		cv::Mat leftImage_, rightImage_;
-		cv::remap(leftImage, leftImage_, mapLeftx, mapLefty, cv::INTER_LINEAR);
-		cv::remap(rightImage, rightImage_, mapRightx, mapRighty, cv::INTER_LINEAR);
+		cv::remap(leftImageFliped, leftImage_, mapLeftx, mapLefty, cv::INTER_LINEAR);
+		cv::remap(rightImageFliped, rightImage_, mapRightx, mapRighty, cv::INTER_LINEAR);
+		leftImageFliped.release();
+		rightImageFliped.release();
 		if (debug)
 		{
 			cv::namedWindow("rectifiedImageLeft");
@@ -168,6 +175,18 @@ void CalculateImageDepth::Update()
 		actor->mapper->SetInputConnection(actor->glyph3D->GetOutputPort());
 		actor->actor->SetMapper(actor->mapper);
 		actor->actor->GetProperty()->SetColor(actor->colors->GetColor3d("Salmon").GetData());
+		vtkNew<vtkMatrix4x4> externalMatrix_l_;
+		for (unsigned int i = 0; i < 4; ++i)
+		{
+			for (unsigned int j = 0; j < 4; ++j)
+			{
+				externalMatrix_l_->SetElement(i, j, externalMatrix_l[4 * i + j]);
+			}
+		}
+		vtkNew<vtkTransform> externalTransform_l;
+		externalTransform_l->SetMatrix(externalMatrix_l_);
+		actor->actor->AddPosition(externalTransform_l->GetPosition());
+		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
 		actor->render->AddActor(actor->actor);
 		actor->renWin->Render();
 	};

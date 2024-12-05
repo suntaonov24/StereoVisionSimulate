@@ -14,12 +14,23 @@
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
 #include <vtkSTLReader.h>
+#include <vtkOBJReader.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkImageLuminance.h>
+#include <vtkConeSource.h>
 #include <vtkCubeSource.h>
+#include <vtkAppendFilter.h>
+#include <vtkDataSetMapper.h>
+#include <vtkLODActor.h>
 #include <vtkLight.h>
+#include <vtkPlaneSource.h>
+#include <vtkTexture.h>
+#include <vtkTextureMapToPlane.h>
+#include <vtkImageFlip.h>
+#include <vtkPlanes.h>
+#include <vtkFrustumSource.h>
 #include <vtkVertexGlyphFilter.h>
 #include <vtkLightActor.h>
 #include <vtkAutoInit.h>
@@ -29,12 +40,19 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 
 struct ModelObject
 {
-	vtkNew<vtkSTLReader> reader;
+	vtkNew<vtkOBJReader> reader;
 	vtkNew<vtkSphereSource> sphere;
 	vtkNew<vtkPolyDataMapper> mapper;
 	vtkNew<vtkActor> actor;
 };
-
+struct CameraImage
+{
+	vtkNew<vtkConeSource> cameraCone;
+	vtkNew<vtkCubeSource> cameraCube;
+	vtkNew<vtkAppendFilter> cameraAppend;
+	vtkNew<vtkDataSetMapper> cameraMapper;
+	vtkNew<vtkLODActor> cameraActor;
+};
 class StereoVisionImpl 
 {
 public:
@@ -42,7 +60,12 @@ public:
 	~StereoVisionImpl() {}
 	ModelObject mObject;
 	ReconActor mReconActor;
+	CameraImage mLeft;
+	CameraImage mRight;
 	bool mDebug = false;
+	void RenderCamera(float centerX,float centerY,float centerZ,float scale, CameraImage* camera)
+	{
+	}
 };
 
 StereoVision::StereoVision()
@@ -68,15 +91,23 @@ void StereoVision::LoadActor(const char* path)
 		mPimpl->mObject.reader->Update();
 		mPimpl->mObject.mapper->SetInputData(mPimpl->mObject.reader->GetOutput());
 		mPimpl->mObject.mapper->Update();
+		mPimpl->mObject.actor->SetMapper(mPimpl->mObject.mapper);
+		double* boundary = mPimpl->mObject.reader->GetOutput()->GetBounds();
+		double x = boundary[0] + boundary[1];
+		double y = boundary[2] + boundary[3];
+		double z = boundary[4] + boundary[5];
+		mPimpl->mObject.actor->AddPosition(-x*0.5,-y*0.5,-z*0.1);
 	}
 	else
 	{
 		mPimpl->mObject.sphere->SetRadius(10);
-		mPimpl->mObject.sphere->SetCenter(50, 10, 400);
+		mPimpl->mObject.sphere->SetCenter(0, 0, 100);
 		mPimpl->mObject.mapper->SetInputConnection(mPimpl->mObject.sphere->GetOutputPort());
+		mPimpl->mObject.actor->SetMapper(mPimpl->mObject.mapper);
 	}
 	//mPimpl->mObject.mapper->ScalarVisibilityOff();
-	mPimpl->mObject.actor->SetMapper(mPimpl->mObject.mapper);
+	
+	
 }
 void StereoVision::SetLeftCamera(CameraManager* camera)
 {
@@ -93,18 +124,6 @@ void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, Camera
 void StereoVision::Update()
 {
 	vtkNew<vtkNamedColors> colors;
-	vtkNew<vtkLight> light;
-	light->SetLightTypeToSceneLight();
-	light->SetPosition(-10,-100,-200);
-	light->SetPositional(true);
-	light->SetConeAngle(20);
-	light->SetFocalPoint(60,-200,500);
-	light->SetDiffuseColor(128,128,128);
-	light->SetAmbientColor(128, 128, 128);
-	light->SetSpecularColor(128, 128, 128);
-
-	vtkNew<vtkLightActor> lightActor;
-	lightActor->SetLight(light);
 	vtkNew<vtkCamera> cameraLeft;
 	vtkNew<vtkCameraActor> cameraActorLeft;
 	//Set Left camera parameters
@@ -124,6 +143,7 @@ void StereoVision::Update()
 			cameraLeftMatrix->SetElement(i, j, externalMatrix_l[4 * i + j]);
 		}
 	}
+	
 	vtkNew<vtkTransform> cameraLeftTransform;
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
 	cameraLeft->ApplyTransform(cameraLeftTransform);
@@ -134,21 +154,9 @@ void StereoVision::Update()
 	vtkNew<vtkRenderer> renderLeft;
 	renWinLeft->AddRenderer(renderLeft);
 	renderLeft->SetActiveCamera(cameraLeft);
-	mPimpl->mObject.actor->SetPosition(-132,-85,-200);
-	vtkNew<vtkCubeSource> cubeSource;
-	cubeSource->SetCenter(0,-100,400);
-	cubeSource->SetXLength(200);
-	cubeSource->SetYLength(200);
-	cubeSource->SetZLength(200);
-	vtkNew<vtkPolyDataMapper> cubeMapper;
-	cubeMapper->SetInputConnection(cubeSource->GetOutputPort());
-	cubeMapper->Update();
-	vtkNew<vtkActor> cubeActor;
-	cubeActor->SetMapper(cubeMapper);
-	cubeActor->AddOrientation(0,0,-2);
 	renderLeft->AddActor(mPimpl->mObject.actor);
-	renderLeft->AddActor(cubeActor);
-	renderLeft->AddViewProp(cubeActor);
+	//renderLeft->AddViewProp(lightActor);
+
 	vtkNew<vtkCamera> cameraRight;
 	vtkNew<vtkCameraActor> cameraActorRight;
 	//Set Right camera parameters
@@ -179,8 +187,6 @@ void StereoVision::Update()
 	renWinRight->AddRenderer(renderRight);
 	renderRight->SetActiveCamera(cameraRight);
 	renderRight->AddActor(mPimpl->mObject.actor);
-	renderRight->AddActor(cubeActor);
-	renderRight->AddViewProp(lightActor);
 	//Renderer world coordinate
 	vtkNew<vtkMatrix4x4> worldMatrix;
 	worldMatrix->Identity();
@@ -203,8 +209,6 @@ void StereoVision::Update()
 	renderer->AddActor(worldAxesActor);
 	
 	renderer->AddActor(mPimpl->mObject.actor);
-	renderer->AddActor(cubeActor);
-	renderer->AddViewProp(lightActor);
 	renderer->ResetCamera();
 	renderer->SetBackground(colors->GetColor3d("SlateGray").GetData());
 	mPimpl->mReconActor.render = renderer;
@@ -212,9 +216,6 @@ void StereoVision::Update()
 	mPimpl->mReconActor.renWin = renderWindow;
 	renWinLeft->Render();
 	renWinRight->Render();
-	renderer->AddLight(light);
-	renderLeft->AddLight(light);
-	renderRight->AddLight(light);
 	//Get renderer window image
 	vtkNew<vtkWindowToImageFilter> windowImageLeft;
 	windowImageLeft->SetInput(renWinLeft);
@@ -222,6 +223,28 @@ void StereoVision::Update()
 	windowImageLeft->SetInputBufferTypeToRGB();
 	windowImageLeft->ReadFrontBufferOff();
 	windowImageLeft->Update();
+	//Get virtual image plane of left camera
+	vtkNew<vtkPlaneSource> planeLeft;
+	planeLeft->SetOrigin(-mLeft->mParams->ImageBoardSize[0] * 0.5, -mLeft->mParams->ImageBoardSize[0] * 0.5,mLeft->mParams->FocalLength);
+	planeLeft->SetPoint1(-mLeft->mParams->ImageBoardSize[0]*0.5, mLeft->mParams->ImageBoardSize[1]*0.5, mLeft->mParams->FocalLength);
+	planeLeft->SetPoint2(mLeft->mParams->ImageBoardSize[0]*0.5, -mLeft->mParams->ImageBoardSize[1]*0.5, mLeft->mParams->FocalLength);
+	vtkNew<vtkImageFlip> flipLeftImage;
+	flipLeftImage->SetInputData(windowImageLeft->GetOutput());
+	flipLeftImage->SetFilteredAxis(0);
+	vtkNew<vtkTexture> textureLeft;
+	textureLeft->SetInputConnection(flipLeftImage->GetOutputPort());
+	vtkNew<vtkTextureMapToPlane> texturePlaneLeft;
+	texturePlaneLeft->SetInputConnection(planeLeft->GetOutputPort());
+	vtkNew<vtkPolyDataMapper> planeMapperLeft;
+	planeMapperLeft->SetInputConnection(texturePlaneLeft->GetOutputPort());
+	vtkNew<vtkActor> texturedPlaneLeft;
+	texturedPlaneLeft->SetMapper(planeMapperLeft);
+	texturedPlaneLeft->SetTexture(textureLeft);
+	texturedPlaneLeft->GetProperty()->SetOpacity(0.5);
+	texturedPlaneLeft->AddPosition(cameraLeftTransform->GetPosition());
+	texturedPlaneLeft->AddOrientation(cameraLeftTransform->GetOrientation());
+	renderer->AddActor(texturedPlaneLeft);
+
 	vtkNew<vtkImageLuminance> luminanceLeft;
 	luminanceLeft->SetInputData(windowImageLeft->GetOutput());
 	luminanceLeft->Update();
@@ -231,6 +254,28 @@ void StereoVision::Update()
 	windowImageRight->SetInputBufferTypeToRGB();
 	windowImageRight->ReadFrontBufferOff();
 	windowImageRight->Update();
+	//Get virtual image plane of right camera
+	vtkNew<vtkPlaneSource> planeRight;
+	planeRight->SetOrigin(-mRight->mParams->ImageBoardSize[0] * 0.5, -mRight->mParams->ImageBoardSize[1] * 0.5,mRight->mParams->FocalLength);
+	planeRight->SetPoint1(-mRight->mParams->ImageBoardSize[0] * 0.5, mRight->mParams->ImageBoardSize[1] * 0.5, mRight->mParams->FocalLength);
+	planeRight->SetPoint2(mRight->mParams->ImageBoardSize[0] * 0.5, -mRight->mParams->ImageBoardSize[1] * 0.5, mRight->mParams->FocalLength);
+	vtkNew<vtkImageFlip> flipRightImage;
+	flipRightImage->SetInputData(windowImageRight->GetOutput());
+	flipRightImage->SetFilteredAxis(0);
+	vtkNew<vtkTexture> textureRight;
+	textureRight->SetInputConnection(flipRightImage->GetOutputPort());
+	vtkNew<vtkTextureMapToPlane> texturePlaneRight;
+	texturePlaneRight->SetInputConnection(planeRight->GetOutputPort());
+	vtkNew<vtkPolyDataMapper> planeMapperRight;
+	planeMapperRight->SetInputConnection(texturePlaneRight->GetOutputPort());
+	vtkNew<vtkActor> texturedPlaneRight;
+	texturedPlaneRight->SetMapper(planeMapperRight);
+	texturedPlaneRight->SetTexture(textureRight);
+	texturedPlaneRight->GetProperty()->SetOpacity(0.5);
+	texturedPlaneRight->AddPosition(cameraRightTransform->GetPosition());
+	texturedPlaneRight->AddOrientation(cameraRightTransform->GetOrientation());
+	renderer->AddActor(texturedPlaneRight);
+
 	vtkNew<vtkImageLuminance> luminanceRight;
 	luminanceRight->SetInputData(windowImageRight->GetOutput());
 	luminanceRight->Update();

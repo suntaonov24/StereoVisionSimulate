@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../CameraModel/RenderingCamera.h"
 
+
 class __EXPORT_API__ CalculateImageDepth
 {
 public:
