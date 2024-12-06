@@ -6,9 +6,11 @@
 	also can be represented by another matrix, the external matrix.
 ## 2. Rendering those generated camera;
     The next step is to render those generated camera, the purpose is to visualize the process of simulation directly.
-## 3. Calculate disparity image. (waiting for developing next time!)
-## 4. Calculate the depth image. (waiting for developing next time!)
+## 3. Calculate disparity image.
+## 4. Calculate the depth image.
 	
 # Dependency libraries
 ## 1. VTK
 ## 2. EIGEN
+## 3. Opencv
+

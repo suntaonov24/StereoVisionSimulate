@@ -6,8 +6,8 @@ int main(int argc, char** argv)
 	CalculateImageDepth calculator;
 	calculator.IsDebug(true);
 	calculator.LoadActor("C:\\practice\\Amsterdam.obj");
-	float cameraLeftPos[] = {40,0,0};
-	float cameraRightPos[] = {50,0,0};
+	float cameraLeftPos[] = {50,0,0};
+	float cameraRightPos[] = {40,0,0};
 	calculator.SetCameraPos(cameraLeftPos,cameraRightPos);
 	float boardLeftSize[] = {10,10};
 	float boardRightSize[] = {10,10};

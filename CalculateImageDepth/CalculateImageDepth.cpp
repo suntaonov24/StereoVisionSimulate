@@ -161,6 +161,7 @@ void CalculateImageDepth::Update()
 			cv::imshow("reconstructed image", reconImage);
 			cv::waitKey(0);
 		}
+		std::cout << reconImage.type() << std::endl;
 		for (unsigned int r = 0; r < reconImage.rows; ++r)
 		{
 			for (unsigned int c = 0; c < reconImage.cols; ++c)
@@ -186,6 +187,7 @@ void CalculateImageDepth::Update()
 			}
 		}
 		vtkNew<vtkTransform> externalTransform_l;
+		externalMatrix_l_->Invert();
 		externalTransform_l->SetMatrix(externalMatrix_l_);
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
 		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
