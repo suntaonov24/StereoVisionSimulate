@@ -146,11 +146,13 @@ void CalculateImageDepth::Update()
 		{
 			std::cout << error.what() << std::endl;
 		}
+		disparity = disparity / 16.0;
 		if (debug)
 		{
 			cv::namedWindow("disparity", cv::WINDOW_FREERATIO);
 			cv::imshow("disparity", disparity);
 		}
+		//std::cout<<"disparity type: "<<disparity.type() << std::endl;
 		cv::Mat reconImage;
 		cv::reprojectImageTo3D(disparity, reconImage, Q);
 		if (debug)
@@ -168,7 +170,7 @@ void CalculateImageDepth::Update()
 		}
 		actor->polydata->SetPoints(actor->points);
 		actor->sphere->SetCenter(0, 0, 0);
-		actor->sphere->SetRadius(0.01);
+		actor->sphere->SetRadius(1);
 		actor->glyph3D->SetSourceConnection(actor->sphere->GetOutputPort());
 		actor->glyph3D->SetInputData(actor->polydata);
 		actor->glyph3D->Update();

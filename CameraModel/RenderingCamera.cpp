@@ -31,6 +31,7 @@
 #include <vtkImageFlip.h>
 #include <vtkPlanes.h>
 #include <vtkFrustumSource.h>
+#include <vtkShrinkPolyData.h>
 #include <vtkVertexGlyphFilter.h>
 #include <vtkLightActor.h>
 #include <vtkAutoInit.h>
@@ -125,7 +126,7 @@ void StereoVision::Update()
 {
 	vtkNew<vtkNamedColors> colors;
 	vtkNew<vtkCamera> cameraLeft;
-	vtkNew<vtkCameraActor> cameraActorLeft;
+	//vtkNew<vtkCameraActor> cameraActorLeft;
 	//Set Left camera parameters
 	float* externalMatrix_l = mLeft->GetExternalMatrix();
 	cameraLeft->SetPosition(0, 0, 0);
@@ -147,7 +148,29 @@ void StereoVision::Update()
 	vtkNew<vtkTransform> cameraLeftTransform;
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
 	cameraLeft->ApplyTransform(cameraLeftTransform);
-	cameraActorLeft->SetCamera(cameraLeft);
+	double planesArrayLeft[24];
+	cameraLeft->GetFrustumPlanes(1.0,planesArrayLeft);
+	vtkNew<vtkPlanes> planesLeft;
+	planesLeft->SetFrustumPlanes(planesArrayLeft);
+	vtkNew<vtkFrustumSource> frustumLeft;
+	frustumLeft->ShowLinesOff();
+	frustumLeft->SetPlanes(planesLeft);
+	vtkNew<vtkShrinkPolyData> shrinkLeft;
+	shrinkLeft->SetInputConnection(frustumLeft->GetOutputPort());
+	shrinkLeft->SetShrinkFactor(0.9);
+	vtkNew<vtkPolyDataMapper> frustumMapperLeft;
+	frustumMapperLeft->SetInputConnection(shrinkLeft->GetOutputPort());
+	vtkNew<vtkProperty> backLeft;
+	backLeft->SetColor(colors->GetColor3d("Tomato").GetData());
+	backLeft->SetOpacity(0.1);
+	vtkNew<vtkActor> frustumActorLeft;
+	frustumActorLeft->SetMapper(frustumMapperLeft);
+	frustumActorLeft->GetProperty()->EdgeVisibilityOff();
+	frustumActorLeft->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
+	frustumActorLeft->SetBackfaceProperty(backLeft);
+	frustumActorLeft->GetProperty()->SetOpacity(0.1);
+
+	//cameraActorLeft->SetCamera(cameraLeft);
 	vtkNew<vtkRenderWindow> renWinLeft;
 	renWinLeft->SetWindowName("Left side camera image");
 	renWinLeft->SetSize(mLeft->mParams->ImageSize[0],mLeft->mParams->ImageSize[1]);
@@ -158,7 +181,7 @@ void StereoVision::Update()
 	//renderLeft->AddViewProp(lightActor);
 
 	vtkNew<vtkCamera> cameraRight;
-	vtkNew<vtkCameraActor> cameraActorRight;
+	//vtkNew<vtkCameraActor> cameraActorRight;
 	//Set Right camera parameters
 	float* externalMatrix_r = mRight->GetExternalMatrix();
 	cameraRight->SetPosition(0, 0, 0);
@@ -179,7 +202,28 @@ void StereoVision::Update()
 	vtkNew<vtkTransform> cameraRightTransform;
 	cameraRightTransform->SetMatrix(cameraRightMatrix);
 	cameraRight->ApplyTransform(cameraRightTransform);
-	cameraActorRight->SetCamera(cameraRight);
+	double planesArrayRight[24];
+	cameraRight->GetFrustumPlanes(1.0, planesArrayRight);
+	vtkNew<vtkPlanes> planesRight;
+	planesRight->SetFrustumPlanes(planesArrayRight);
+	vtkNew<vtkFrustumSource> frustumRight;
+	frustumRight->ShowLinesOff();
+	frustumRight->SetPlanes(planesRight);
+	vtkNew<vtkShrinkPolyData> shrinkRight;
+	shrinkRight->SetInputConnection(frustumRight->GetOutputPort());
+	shrinkRight->SetShrinkFactor(0.9);
+	vtkNew<vtkPolyDataMapper> frustumMapperRight;
+	frustumMapperRight->SetInputConnection(shrinkRight->GetOutputPort());
+	vtkNew<vtkProperty> backRight;
+	backRight->SetColor(colors->GetColor3d("Tomato").GetData());
+	backRight->SetOpacity(0.1);
+	vtkNew<vtkActor> frustumActorRight;
+	frustumActorRight->SetMapper(frustumMapperRight);
+	frustumActorRight->GetProperty()->EdgeVisibilityOff();
+	frustumActorRight->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
+	frustumActorRight->SetBackfaceProperty(backLeft);
+	frustumActorRight->GetProperty()->SetOpacity(0.1);
+	//cameraActorRight->SetCamera(cameraRight);
 	vtkNew<vtkRenderWindow> renWinRight;
 	renWinRight->SetWindowName("Right side camera image");
 	renWinRight->SetSize(mRight->mParams->ImageSize[0],mRight->mParams->ImageSize[1]);
@@ -195,7 +239,7 @@ void StereoVision::Update()
 	vtkNew<vtkAxesActor> worldAxesActor;
 	worldAxesActor->SetOrigin(worldTransform->GetPosition());
 	worldAxesActor->SetOrientation(worldTransform->GetOrientation());
-	worldAxesActor->SetTotalLength(50,50,50);
+	worldAxesActor->SetTotalLength(10,10,10);
 	//Renderer left and right camera actor
 	vtkNew<vtkRenderer> renderer;
 	vtkNew<vtkRenderWindow> renderWindow;
@@ -204,8 +248,10 @@ void StereoVision::Update()
 	renderWindow->SetSize(1000,500);
 	vtkNew<vtkRenderWindowInteractor> iren;
 	iren->SetRenderWindow(renderWindow);
-	renderer->AddActor(cameraActorLeft);
-	renderer->AddActor(cameraActorRight);
+	//renderer->AddActor(cameraActorLeft);
+	renderer->AddActor(frustumActorLeft);
+	renderer->AddActor(frustumActorRight);
+	//renderer->AddActor(cameraActorRight);
 	renderer->AddActor(worldAxesActor);
 	
 	renderer->AddActor(mPimpl->mObject.actor);
