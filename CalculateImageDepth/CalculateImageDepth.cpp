@@ -97,19 +97,28 @@ void CalculateImageDepth::Update()
 		cv::Mat distCoeffs_l, distCoeffs_r;
 		cv::Mat rotation_l(3, 3, CV_32FC1);
 		cv::Mat rotation_r(3, 3, CV_32FC1);
+		cv::Mat rotation_translation_l(4,4,CV_32FC1);
+		cv::Mat rotation_translation_r(4,4,CV_32FC1);
+		for (unsigned int i = 0; i < 4; ++i)
+		{
+			for (unsigned int j = 0; j < 4; ++j)
+			{
+				rotation_translation_l.at<float>(i, j) = externalMatrix_l[4 * i + j];
+				rotation_translation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
+			}
+		}
+		rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
+		cv::Mat translation(3, 1, CV_32FC1);
 		for (unsigned int i = 0; i < 3; ++i)
 		{
 			for (unsigned int j = 0; j < 3; ++j)
 			{
-				rotation_l.at<float>(i, j) = externalMatrix_l[4 * i + j];
-				rotation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
+				rotation_l.at<float>(i, j) = rotation_translation_l.at<float>(i,j);
 			}
 		}
-		rotation_l = rotation_l * rotation_r.inv();
-		cv::Mat translation(3, 1, CV_32FC1);
-		translation.at<float>(0) = externalMatrix_l[3] - externalMatrix_r[3];
-		translation.at<float>(1) = externalMatrix_l[7] - externalMatrix_r[7];
-		translation.at<float>(2) = externalMatrix_l[11] - externalMatrix_r[11];
+		translation.at<float>(0) = rotation_translation_l.at<float>(0,3);
+		translation.at<float>(1) = rotation_translation_l.at<float>(1,3);
+		translation.at<float>(2) = rotation_translation_l.at<float>(2,3);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1(3, 3, CV_32FC1), R2(3, 3, CV_32FC1), P1(3, 4, CV_32FC1), P2(3, 4, CV_32FC1), Q(4, 4, CV_32FC1);
 		try
@@ -136,7 +145,7 @@ void CalculateImageDepth::Update()
 			cv::namedWindow("rectifiedImageRight");
 			cv::imshow("rectifiedImageRight", rightImage_);
 		}
-		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(128, 15);
+		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(96, 9);
 		cv::Mat disparity;
 		try
 		{
@@ -150,9 +159,8 @@ void CalculateImageDepth::Update()
 		if (debug)
 		{
 			cv::namedWindow("disparity", cv::WINDOW_FREERATIO);
-			cv::imshow("disparity", disparity);
+			cv::imshow("disparity", disparity*128);
 		}
-		//std::cout<<"disparity type: "<<disparity.type() << std::endl;
 		cv::Mat reconImage;
 		cv::reprojectImageTo3D(disparity, reconImage, Q);
 		if (debug)
@@ -166,7 +174,7 @@ void CalculateImageDepth::Update()
 		{
 			for (unsigned int c = 0; c < reconImage.cols; ++c)
 			{
-				actor->points->InsertNextPoint(reconImage.at<cv::Vec3f>(r, c)[0], reconImage.at<cv::Vec3f>(r, c)[1], reconImage.at<cv::Vec3f>(r, c)[2]);
+				actor->points->InsertNextPoint(reconImage.at<cv::Vec3f>(r, c)[0], reconImage.at<cv::Vec3f>(r, c)[1], -reconImage.at<cv::Vec3f>(r, c)[2]);
 			}
 		}
 		actor->polydata->SetPoints(actor->points);
@@ -186,12 +194,10 @@ void CalculateImageDepth::Update()
 				externalMatrix_l_->SetElement(i, j, externalMatrix_l[4 * i + j]);
 			}
 		}
-		externalMatrix_l_->Invert();
 		vtkNew<vtkTransform> externalTransform_l;
 		externalTransform_l->SetMatrix(externalMatrix_l_);
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
 		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
-		//actor->actor->RotateZ(180);
 		actor->render->AddActor(actor->actor);
 		actor->renWin->Render();
 	};
