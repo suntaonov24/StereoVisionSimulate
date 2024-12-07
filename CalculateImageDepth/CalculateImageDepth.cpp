@@ -194,9 +194,9 @@ void CalculateImageDepth::Update()
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
 		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
 		vtkNew<vtkAxesActor> cameraAxes;
-		cameraAxes->SetPosition(externalTransform_l->GetPosition());
-		cameraAxes->SetOrientation(externalTransform_l->GetOrientation());
-		std::cout<<cameraAxes->GetPosition()[0]<<std::endl;
+		cameraAxes->AddPosition(externalTransform_l->GetPosition());
+		cameraAxes->AddOrientation(externalTransform_l->GetOrientation());
+		std::cout<<cameraAxes->GetOrigin()[0]<<std::endl;
 		cameraAxes->SetTotalLength(50, 50, 50);
 		actor->render->AddActor(actor->actor);
 		actor->render->AddActor(cameraAxes);
