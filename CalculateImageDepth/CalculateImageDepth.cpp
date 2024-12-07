@@ -171,7 +171,7 @@ void CalculateImageDepth::Update()
 		}
 		actor->polydata->SetPoints(actor->points);
 		actor->sphere->SetCenter(0, 0, 0);
-		actor->sphere->SetRadius(1);
+		actor->sphere->SetRadius(0.1);
 		actor->glyph3D->SetSourceConnection(actor->sphere->GetOutputPort());
 		actor->glyph3D->SetInputData(actor->polydata);
 		actor->glyph3D->Update();
@@ -186,11 +186,12 @@ void CalculateImageDepth::Update()
 				externalMatrix_l_->SetElement(i, j, externalMatrix_l[4 * i + j]);
 			}
 		}
-		vtkNew<vtkTransform> externalTransform_l;
 		externalMatrix_l_->Invert();
+		vtkNew<vtkTransform> externalTransform_l;
 		externalTransform_l->SetMatrix(externalMatrix_l_);
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
 		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
+		//actor->actor->RotateZ(180);
 		actor->render->AddActor(actor->actor);
 		actor->renWin->Render();
 	};
