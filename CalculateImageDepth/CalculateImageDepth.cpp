@@ -186,13 +186,20 @@ void CalculateImageDepth::Update()
 				externalMatrix_l_->SetElement(i, j, externalMatrix_l[4 * i + j]);
 			}
 		}
+		externalMatrix_l_->Print(std::cout);
 		externalMatrix_l_->Invert();
+		externalMatrix_l_->Print(std::cout);
 		vtkNew<vtkTransform> externalTransform_l;
 		externalTransform_l->SetMatrix(externalMatrix_l_);
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
 		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
-		//actor->actor->RotateZ(180);
+		vtkNew<vtkAxesActor> cameraAxes;
+		cameraAxes->SetPosition(externalTransform_l->GetPosition());
+		cameraAxes->SetOrientation(externalTransform_l->GetOrientation());
+		std::cout<<cameraAxes->GetPosition()[0]<<std::endl;
+		cameraAxes->SetTotalLength(50, 50, 50);
 		actor->render->AddActor(actor->actor);
+		actor->render->AddActor(cameraAxes);
 		actor->renWin->Render();
 	};
 	mStereoVision->RegisterCallback(function);

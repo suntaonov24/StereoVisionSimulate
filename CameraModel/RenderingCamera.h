@@ -11,6 +11,7 @@
 #include <vtkProperty.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkSphereSource.h>
+#include <vtkAxesActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkSmartPointer.h>
 struct ReconActor
