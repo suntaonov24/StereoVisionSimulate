@@ -107,6 +107,8 @@ void CalculateImageDepth::Update()
 				rotation_translation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
 			}
 		}
+		rotation_translation_l = rotation_translation_l.inv();
+		rotation_translation_r = rotation_translation_r.inv();
 		rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
 		cv::Mat translation(3, 1, CV_32FC1);
 		for (unsigned int i = 0; i < 3; ++i)
@@ -194,6 +196,7 @@ void CalculateImageDepth::Update()
 				externalMatrix_l_->SetElement(i, j, externalMatrix_l[4 * i + j]);
 			}
 		}
+		externalMatrix_l_->Invert();
 		vtkNew<vtkTransform> externalTransform_l;
 		externalTransform_l->SetMatrix(externalMatrix_l_);
 		actor->actor->AddPosition(externalTransform_l->GetPosition());

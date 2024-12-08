@@ -69,6 +69,7 @@ void CameraManager::Update()
 		rotationMatrix(1,0), rotationMatrix(1,1), rotationMatrix(1,2), mParams->CameraPos[1],
 		rotationMatrix(2,0), rotationMatrix(2,1), rotationMatrix(2,2), mParams->CameraPos[2],
 		0.0, 0.0, 0.0, 1.0;
+	externalMatrix = externalMatrix.inverse();
 	std::cout << "External matrix: " << std::endl;
 	std::cout << externalMatrix << std::endl;
 	Eigen::Matrix4f externalMatrix_ = externalMatrix.transpose();

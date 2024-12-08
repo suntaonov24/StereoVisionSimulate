@@ -144,7 +144,7 @@ void StereoVision::Update()
 			cameraLeftMatrix->SetElement(i, j, externalMatrix_l[4 * i + j]);
 		}
 	}
-	
+	cameraLeftMatrix->Invert();
 	vtkNew<vtkTransform> cameraLeftTransform;
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
 	cameraLeft->ApplyTransform(cameraLeftTransform);
@@ -199,6 +199,7 @@ void StereoVision::Update()
 			cameraRightMatrix->SetElement(i, j, externalMatrix_r[4 * i + j]);
 		}
 	}
+	cameraRightMatrix->Invert();
 	vtkNew<vtkTransform> cameraRightTransform;
 	cameraRightTransform->SetMatrix(cameraRightMatrix);
 	cameraRight->ApplyTransform(cameraRightTransform);
