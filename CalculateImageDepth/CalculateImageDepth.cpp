@@ -122,7 +122,7 @@ void CalculateImageDepth::Update()
 		translation.at<float>(1) = rotation_translation_l.at<float>(1,3);
 		translation.at<float>(2) = rotation_translation_l.at<float>(2,3);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
-		cv::Mat R1(3, 3, CV_32FC1), R2(3, 3, CV_32FC1), P1(3, 4, CV_32FC1), P2(3, 4, CV_32FC1), Q(4, 4, CV_32FC1);
+		cv::Mat R1, R2, P1, P2, Q;
 		try
 		{
 			cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_l, translation, R1, R2, P1, P2, Q);
@@ -197,6 +197,18 @@ void CalculateImageDepth::Update()
 			}
 		}
 		externalMatrix_l_->Invert();
+		vtkNew<vtkMatrix4x4> cameraRectifiedMatrix;
+		cameraRectifiedMatrix->Identity();
+		for (unsigned int i = 0; i < 3; ++i)
+		{
+			for (unsigned int j = 0; j < 3; ++j)
+			{
+				cameraRectifiedMatrix->SetElement(i,j,R1.at<double>(i,j));
+			}
+		}
+		cameraRectifiedMatrix->Print(std::cout);
+		cameraRectifiedMatrix->Invert();
+		vtkMatrix4x4::Multiply4x4(cameraRectifiedMatrix, externalMatrix_l_, externalMatrix_l_);
 		vtkNew<vtkTransform> externalTransform_l;
 		externalTransform_l->SetMatrix(externalMatrix_l_);
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
