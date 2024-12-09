@@ -1,0 +1,5 @@
+add_library(CameraModel RenderingCamera.cpp CameraParams.cpp)
+target_include_directories(CameraModel PUBLIC ${CMAKE_SOURCE_DIR}/Library/windows/VTK/include/vtk-9.1)
+target_include_directories(CameraModel PUBLIC ${CMAKE_SOURCE_DIR}/Library/windows/eigen/include/eigen3)
+file(GLOB VTK_LIBS ${CMAKE_SOURCE_DIR}/Library/windows/VTK/lib/*.lib)
+target_link_libraries(CameraModel ${VTK_LIBS})

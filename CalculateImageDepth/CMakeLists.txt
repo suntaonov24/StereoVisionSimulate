@@ -1,0 +1,7 @@
+add_library(CalculateImageDepth CalculateImageDepth.cpp)
+target_include_directories(CalculateImageDepth PUBLIC ${CMAKE_SOURCE_DIR}/Library/windows/VTK/include/vtk-9.1)
+target_include_directories(CalculateImageDepth PUBLIC ${CMAKE_SOURCE_DIR}/Library/windows/opencv/include)
+file(GLOB VTK_LIBS ${CMAKE_SOURCE_DIR}/Library/windows/VTK/lib/*.lib)
+target_link_libraries(CameraModel ${VTK_LIBS})
+file(GLOB OPENCV_LIBS ${CMAKE_SOURCE_DIR}/Library/windows/opencv/x64/vc17/lib/*.lib)
+target_link_libraries(CameraModel ${OPENCV_LIBS})
