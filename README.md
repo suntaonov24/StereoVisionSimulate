@@ -1,10 +1,10 @@
 # StereoVision Simulation Code
 
-## 1. Generate camera instances;
+## 1. Generate camera instances.
     The main camera parameters are focal length, optical point projected at the center of image plane, those parameters can be
 	descriped by internal matrix, and where the camera located in real world space, such as where the camera facing at, those features
 	can be represented by another matrix, which is external matrix.
-## 2. Rendering those generated camera;
+## 2. Rendering those generated camera.
     The next step is to render those generated camera, the purpose is to visualize the whole process of stereovision simulation directly.
 ## 3. Calculate disparity image.
    Two images of some scenery, captured by left and right virtual cameras, to generate a disparity image. Then the depth infomation 
@@ -20,15 +20,15 @@
 ## 3. Opencv
 ## 4. ITK
 
-# The interface of StereoVision Simulation system
+## The interface of StereoVision Simulation system
 ![Image](https://github.com/suntaonov24/StereoVisionSimulate/blob/master/Images/image1.png)
 
-#The snapshot of left and right cameras
+## The snapshot images of left and right cameras
 ![Image](https://github.com/suntaonov24/StereoVisionSimulate/blob/master/Images/image2.png)
 
-#The snapshot of depth image
+## The snapshot of depth image
 ![Image](https://github.com/suntaonov24/StereoVisionSimulate/blob/master/Images/image3.png)
 
-#Overlapping the captured scenery and it's corresponding 3D depth point cloud data
+## Overlapping the captured scenery and it's corresponding 3D depth point cloud data
 ![Image](https://github.com/suntaonov24/StereoVisionSimulate/blob/master/Images/image4.png)
 

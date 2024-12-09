@@ -12,8 +12,8 @@ int main(int argc, char** argv)
 	float boardLeftSize[] = {10,10};
 	float boardRightSize[] = {10,10};
 	calculator.SetBoardSize(boardLeftSize,boardRightSize);
-	float cameraLeftOri[] = { 0,-PI/180*5,PI / 180 * 90 };
-	float cameraRightOri[] = {0,PI/180*10,PI / 180 * 90 };
+	float cameraLeftOri[] = { 0,0,PI / 180 * 90 };
+	float cameraRightOri[] = {0,0,PI / 180 * 90 };
 	calculator.SetCameraOrientation(cameraLeftOri,cameraRightOri);
 	calculator.SetFocalLength(10,10);
 	unsigned int imageLeftSize[] = {512,512 };

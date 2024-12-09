@@ -24,6 +24,7 @@ class __EXPORT_API__ CameraManager
 public:
 	CameraManager();
 	~CameraManager();
+	void IsDebug(bool debug);
 	void SetCameraPos(float x, float y, float z);
 	void SetCameraOrientation(float x, float y, float z);
 	void SetBoardSize(float x, float y);
@@ -37,4 +38,5 @@ public:
 private:
 	float mInternalMatrix[9];
 	float mExternalMatrix[16];
+	bool mDebug = false;
 };

@@ -113,10 +113,12 @@ void StereoVision::LoadActor(const char* path)
 void StereoVision::SetLeftCamera(CameraManager* camera)
 {
 	mLeft = camera;
+	mLeft->IsDebug(mPimpl->mDebug);
 }
 void StereoVision::SetRightCamera(CameraManager* camera)
 {
 	mRight = camera;
+	mRight->IsDebug(mPimpl->mDebug);
 }
 void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right, ReconActor* actor,bool debug))
 {

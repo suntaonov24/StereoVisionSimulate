@@ -12,6 +12,10 @@ CameraManager::~CameraManager()
 		delete mParams;
 	}
 }
+void CameraManager::IsDebug(bool debug)
+{
+	mDebug = debug;
+}
 void CameraManager::SetCameraPos(float x, float y,float z)
 {
 	mParams->CameraPos[0] = x;
@@ -59,8 +63,11 @@ void CameraManager::Update()
 	internalMatrix << mParams->FocalLength / spacingX, 0.0, mParams->ImageSize[0] * 0.5,
 		0.0, mParams->FocalLength / spacingY, mParams->ImageSize[1] * 0.5,
 		0.0, 0.0, 1.0;
-	std::cout << "Internal matrix: " << std::endl;
-	std::cout << internalMatrix << std::endl;
+	if (mDebug)
+	{
+		std::cout << "Internal matrix: " << std::endl;
+		std::cout << internalMatrix << std::endl;
+	}
 	Eigen::Matrix3f internalMatrix_ = internalMatrix.transpose();
 	memcpy(mInternalMatrix, internalMatrix_.data(), 9 * sizeof(float));
 	//Calculate camera external matrix
@@ -70,8 +77,11 @@ void CameraManager::Update()
 		rotationMatrix(2,0), rotationMatrix(2,1), rotationMatrix(2,2), mParams->CameraPos[2],
 		0.0, 0.0, 0.0, 1.0;
 	externalMatrix = externalMatrix.inverse();
-	std::cout << "External matrix: " << std::endl;
-	std::cout << externalMatrix << std::endl;
+	if (mDebug)
+	{
+		std::cout << "External matrix: " << std::endl;
+		std::cout << externalMatrix << std::endl;
+	}
 	Eigen::Matrix4f externalMatrix_ = externalMatrix.transpose();
 	memcpy(mExternalMatrix, externalMatrix_.data(), 16 * sizeof(float));
 }
