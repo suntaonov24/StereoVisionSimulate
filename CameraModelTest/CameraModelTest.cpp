@@ -6,11 +6,11 @@ int main(int argc, char** argv)
 	CalculateImageDepth calculator;
 	calculator.IsDebug(true);
 	calculator.LoadActor(argv[1]);
-	float cameraLeftPos[] = {50,0,0};
-	float cameraRightPos[] = {45,0,0};
+	float cameraLeftPos[] = {std::stof(argv[2]),std::stof(argv[3]),std::stof(argv[4])};
+	float cameraRightPos[] = { std::stof(argv[5]),std::stof(argv[6]),std::stof(argv[7]) };
 	calculator.SetCameraPos(cameraLeftPos,cameraRightPos);
-	float boardLeftSize[] = {10,10};
-	float boardRightSize[] = {10,10};
+	float boardLeftSize[] = {std::stof(argv[8]),std::stof(argv[9])};
+	float boardRightSize[] = { std::stof(argv[10]),std::stof(argv[11]) };
 	calculator.SetBoardSize(boardLeftSize,boardRightSize);
 	float cameraLeftOri[] = { 0,0,PI / 180 * 90 };
 	float cameraRightOri[] = {0,0,PI / 180 * 90 };
