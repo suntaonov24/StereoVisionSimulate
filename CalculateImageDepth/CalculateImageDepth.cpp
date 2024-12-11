@@ -206,7 +206,6 @@ void CalculateImageDepth::Update()
 				cameraRectifiedMatrix->SetElement(i,j,R1.at<double>(i,j));
 			}
 		}
-		cameraRectifiedMatrix->Print(std::cout);
 		cameraRectifiedMatrix->Invert();
 		vtkMatrix4x4::Multiply4x4(cameraRectifiedMatrix, externalMatrix_l_, externalMatrix_l_);
 		vtkNew<vtkTransform> externalTransform_l;

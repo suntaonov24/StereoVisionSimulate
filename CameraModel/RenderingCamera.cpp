@@ -64,8 +64,22 @@ public:
 	CameraImage mLeft;
 	CameraImage mRight;
 	bool mDebug = false;
-	void RenderCamera(float centerX,float centerY,float centerZ,float scale, CameraImage* camera)
+	void RenderCamera(vtkTransform* transform,float scale, CameraImage* camera)
 	{
+		camera->cameraCone->SetHeight(1.5);
+		camera->cameraCone->SetResolution(12);
+		camera->cameraCone->SetRadius(0.4);
+		camera->cameraCube->SetXLength(1.5);
+		camera->cameraCube->SetZLength(0.8);
+		camera->cameraCube->SetCenter(0.4,0,0);
+		camera->cameraAppend->AddInputConnection(camera->cameraCube->GetOutputPort());
+		camera->cameraAppend->AddInputConnection(camera->cameraCone->GetOutputPort());
+		camera->cameraMapper->SetInputConnection(camera->cameraAppend->GetOutputPort());
+		camera->cameraActor->SetMapper(camera->cameraMapper);
+		camera->cameraActor->SetScale(scale, scale, scale);
+		camera->cameraActor->SetOrientation(0,0,90);
+		camera->cameraActor->AddPosition(transform->GetPosition());
+		camera->cameraActor->AddOrientation(transform->GetOrientation());
 	}
 };
 
@@ -150,6 +164,7 @@ void StereoVision::Update()
 	vtkNew<vtkTransform> cameraLeftTransform;
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
 	cameraLeft->ApplyTransform(cameraLeftTransform);
+	mPimpl->RenderCamera(cameraLeftTransform,2,&mPimpl->mLeft);
 	double planesArrayLeft[24];
 	cameraLeft->GetFrustumPlanes(1.0,planesArrayLeft);
 	vtkNew<vtkPlanes> planesLeft;
@@ -205,6 +220,7 @@ void StereoVision::Update()
 	vtkNew<vtkTransform> cameraRightTransform;
 	cameraRightTransform->SetMatrix(cameraRightMatrix);
 	cameraRight->ApplyTransform(cameraRightTransform);
+	mPimpl->RenderCamera(cameraRightTransform, 2, &mPimpl->mRight);
 	double planesArrayRight[24];
 	cameraRight->GetFrustumPlanes(1.0, planesArrayRight);
 	vtkNew<vtkPlanes> planesRight;
@@ -251,12 +267,12 @@ void StereoVision::Update()
 	renderWindow->SetSize(1000,500);
 	vtkNew<vtkRenderWindowInteractor> iren;
 	iren->SetRenderWindow(renderWindow);
-	//renderer->AddActor(cameraActorLeft);
 	renderer->AddActor(frustumActorLeft);
 	renderer->AddActor(frustumActorRight);
-	//renderer->AddActor(cameraActorRight);
 	renderer->AddActor(worldAxesActor);
-	
+	renderer->AddActor(mPimpl->mLeft.cameraActor);
+	renderer->AddActor(mPimpl->mRight.cameraActor);
+
 	renderer->AddActor(mPimpl->mObject.actor);
 	renderer->ResetCamera();
 	renderer->SetBackground(colors->GetColor3d("SlateGray").GetData());

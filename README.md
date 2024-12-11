@@ -33,8 +33,7 @@
 ![Image](https://github.com/suntaonov24/StereoVisionSimulate/blob/master/Images/image4.png)
 
 # Run the compiled binary files
-## It is easy to run the code in binary folder, just open the comand or powellshell interface in windows system,
-and type the folling command.
+## It is easy to run the code in binary folder, just open the comand or powellshell interface in windows system, and type the folling command.
  .\StereoVision.exe C:\practice\CameraModel\data\Amsterdam.obj 50 0 0 45 0 0 10 10 10 10
  params: 1. 3D dataset, 2. position of left camera: x coordinate, 3. y coordinate, 4. z coordinate, 5. position of right camera: x coordinate,6. y coordinate, 7. z coordinate,
 8. physical size of left camera: width, 9. height, 10. physical size of right camera: width, 11. height.
