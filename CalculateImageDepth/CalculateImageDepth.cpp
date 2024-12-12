@@ -162,16 +162,10 @@ void CalculateImageDepth::Update()
 		{
 			cv::namedWindow("disparity", cv::WINDOW_FREERATIO);
 			cv::imshow("disparity", disparity*128);
+			cv::waitKey(0);
 		}
 		cv::Mat reconImage;
 		cv::reprojectImageTo3D(disparity, reconImage, Q);
-		if (debug)
-		{
-			cv::namedWindow("reconstructed image");
-			cv::imshow("reconstructed image", reconImage);
-			cv::waitKey(0);
-		}
-		std::cout << reconImage.type() << std::endl;
 		for (unsigned int r = 0; r < reconImage.rows; ++r)
 		{
 			for (unsigned int c = 0; c < reconImage.cols; ++c)

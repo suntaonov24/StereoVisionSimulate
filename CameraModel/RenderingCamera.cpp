@@ -42,7 +42,6 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 struct ModelObject
 {
 	vtkNew<vtkOBJReader> reader;
-	vtkNew<vtkSphereSource> sphere;
 	vtkNew<vtkPolyDataMapper> mapper;
 	vtkNew<vtkActor> actor;
 };
@@ -100,29 +99,16 @@ void StereoVision::IsDebug(bool debug)
 }
 void StereoVision::LoadActor(const char* path)
 {
-	if (std::string(path) != "")
-	{
-		mPimpl->mObject.reader->SetFileName(path);
-		mPimpl->mObject.reader->Update();
-		mPimpl->mObject.mapper->SetInputData(mPimpl->mObject.reader->GetOutput());
-		mPimpl->mObject.mapper->Update();
-		mPimpl->mObject.actor->SetMapper(mPimpl->mObject.mapper);
-		double* boundary = mPimpl->mObject.reader->GetOutput()->GetBounds();
-		double x = boundary[0] + boundary[1];
-		double y = boundary[2] + boundary[3];
-		double z = boundary[4] + boundary[5];
-		mPimpl->mObject.actor->AddPosition(-x*0.5,-y*0.5,-z*0.1);
-	}
-	else
-	{
-		mPimpl->mObject.sphere->SetRadius(10);
-		mPimpl->mObject.sphere->SetCenter(0, 0, 100);
-		mPimpl->mObject.mapper->SetInputConnection(mPimpl->mObject.sphere->GetOutputPort());
-		mPimpl->mObject.actor->SetMapper(mPimpl->mObject.mapper);
-	}
-	//mPimpl->mObject.mapper->ScalarVisibilityOff();
-	
-	
+	mPimpl->mObject.reader->SetFileName(path);
+	mPimpl->mObject.reader->Update();
+	mPimpl->mObject.mapper->SetInputData(mPimpl->mObject.reader->GetOutput());
+	mPimpl->mObject.mapper->Update();
+	mPimpl->mObject.actor->SetMapper(mPimpl->mObject.mapper);
+	double* boundary = mPimpl->mObject.reader->GetOutput()->GetBounds();
+	double x = boundary[0] + boundary[1];
+	double y = boundary[2] + boundary[3];
+	double z = boundary[4] + boundary[5];
+	mPimpl->mObject.actor->AddPosition(-x*0.5,-y*0.5,-z*0.1);
 }
 void StereoVision::SetLeftCamera(CameraManager* camera)
 {
@@ -142,7 +128,6 @@ void StereoVision::Update()
 {
 	vtkNew<vtkNamedColors> colors;
 	vtkNew<vtkCamera> cameraLeft;
-	//vtkNew<vtkCameraActor> cameraActorLeft;
 	//Set Left camera parameters
 	float* externalMatrix_l = mLeft->GetExternalMatrix();
 	cameraLeft->SetPosition(0, 0, 0);
@@ -195,10 +180,8 @@ void StereoVision::Update()
 	renWinLeft->AddRenderer(renderLeft);
 	renderLeft->SetActiveCamera(cameraLeft);
 	renderLeft->AddActor(mPimpl->mObject.actor);
-	//renderLeft->AddViewProp(lightActor);
 
 	vtkNew<vtkCamera> cameraRight;
-	//vtkNew<vtkCameraActor> cameraActorRight;
 	//Set Right camera parameters
 	float* externalMatrix_r = mRight->GetExternalMatrix();
 	cameraRight->SetPosition(0, 0, 0);
@@ -242,7 +225,6 @@ void StereoVision::Update()
 	frustumActorRight->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
 	frustumActorRight->SetBackfaceProperty(backLeft);
 	frustumActorRight->GetProperty()->SetOpacity(0.1);
-	//cameraActorRight->SetCamera(cameraRight);
 	vtkNew<vtkRenderWindow> renWinRight;
 	renWinRight->SetWindowName("Right side camera image");
 	renWinRight->SetSize(mRight->mParams->ImageSize[0],mRight->mParams->ImageSize[1]);
