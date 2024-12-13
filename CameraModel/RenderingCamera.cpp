@@ -39,6 +39,48 @@ VTK_MODULE_INIT(vtkRenderingOpenGL2);
 VTK_MODULE_INIT(vtkInteractionStyle);
 VTK_MODULE_INIT(vtkRenderingFreeType);
 
+#define RENDER_CAMERA_FRUSTUM(CameraID) double planesArray##CameraID[24];		\
+camera##CameraID->GetFrustumPlanes(1.0, planesArray##CameraID);				\
+vtkNew<vtkPlanes> planes##CameraID;									\
+planes##CameraID->SetFrustumPlanes(planesArray##CameraID);					\
+vtkNew<vtkFrustumSource> frustum##CameraID;							\
+frustum##CameraID->ShowLinesOff();									\
+frustum##CameraID->SetPlanes(planes##CameraID);								\
+vtkNew<vtkShrinkPolyData> shrink##CameraID;							\
+shrink##CameraID->SetInputConnection(frustum##CameraID->GetOutputPort());	\
+shrink##CameraID->SetShrinkFactor(0.9);								\
+vtkNew<vtkPolyDataMapper> frustumMapper##CameraID;					\
+frustumMapper##CameraID->SetInputConnection(shrink##CameraID->GetOutputPort());\
+vtkNew<vtkProperty> back##CameraID;									\
+back##CameraID->SetColor(colors->GetColor3d("Tomato").GetData());\
+back##CameraID->SetOpacity(0.1);								\
+vtkNew<vtkActor> frustumActor##CameraID;							\
+frustumActor##CameraID->SetMapper(frustumMapper##CameraID);				\
+frustumActor##CameraID->GetProperty()->EdgeVisibilityOff();\
+frustumActor##CameraID->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());\
+frustumActor##CameraID->SetBackfaceProperty(back##CameraID);		\
+frustumActor##CameraID->GetProperty()->SetOpacity(0.1);	
+
+#define RENDER_TEXTURE_PLANE(CameraID) vtkNew<vtkPlaneSource> plane##CameraID;					\
+plane##CameraID->SetOrigin(-m##CameraID->mParams->ImageBoardSize[0] * 0.5, -m##CameraID->mParams->ImageBoardSize[0] * 0.5, m##CameraID->mParams->FocalLength);\
+plane##CameraID->SetPoint1(-m##CameraID->mParams->ImageBoardSize[0] * 0.5, m##CameraID->mParams->ImageBoardSize[1] * 0.5, m##CameraID->mParams->FocalLength);\
+plane##CameraID->SetPoint2(m##CameraID->mParams->ImageBoardSize[0] * 0.5, -m##CameraID->mParams->ImageBoardSize[1] * 0.5, m##CameraID->mParams->FocalLength);\
+vtkNew<vtkImageFlip> flip##CameraID##Image;												\
+flip##CameraID##Image->SetInputData(windowImage##CameraID->GetOutput());		\
+flip##CameraID##Image->SetFilteredAxis(0);									\
+vtkNew<vtkTexture> texture##CameraID;										\
+texture##CameraID->SetInputConnection(flip##CameraID##Image->GetOutputPort());\
+vtkNew<vtkTextureMapToPlane> texturePlane##CameraID;						\
+texturePlane##CameraID->SetInputConnection(plane##CameraID->GetOutputPort());\
+vtkNew<vtkPolyDataMapper> planeMapper##CameraID;								\
+planeMapper##CameraID->SetInputConnection(texturePlane##CameraID->GetOutputPort());\
+vtkNew<vtkActor> texturedPlane##CameraID;												\
+texturedPlane##CameraID->SetMapper(planeMapper##CameraID);								\
+texturedPlane##CameraID->SetTexture(texture##CameraID);								\
+texturedPlane##CameraID->GetProperty()->SetOpacity(0.5);							\
+texturedPlane##CameraID->AddPosition(camera##CameraID##Transform->GetPosition());		\
+texturedPlane##CameraID->AddOrientation(camera##CameraID##Transform->GetOrientation());
+
 struct ModelObject
 {
 	vtkNew<vtkOBJReader> reader;
@@ -150,29 +192,8 @@ void StereoVision::Update()
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
 	cameraLeft->ApplyTransform(cameraLeftTransform);
 	mPimpl->RenderCamera(cameraLeftTransform,2,&mPimpl->mLeft);
-	double planesArrayLeft[24];
-	cameraLeft->GetFrustumPlanes(1.0,planesArrayLeft);
-	vtkNew<vtkPlanes> planesLeft;
-	planesLeft->SetFrustumPlanes(planesArrayLeft);
-	vtkNew<vtkFrustumSource> frustumLeft;
-	frustumLeft->ShowLinesOff();
-	frustumLeft->SetPlanes(planesLeft);
-	vtkNew<vtkShrinkPolyData> shrinkLeft;
-	shrinkLeft->SetInputConnection(frustumLeft->GetOutputPort());
-	shrinkLeft->SetShrinkFactor(0.9);
-	vtkNew<vtkPolyDataMapper> frustumMapperLeft;
-	frustumMapperLeft->SetInputConnection(shrinkLeft->GetOutputPort());
-	vtkNew<vtkProperty> backLeft;
-	backLeft->SetColor(colors->GetColor3d("Tomato").GetData());
-	backLeft->SetOpacity(0.1);
-	vtkNew<vtkActor> frustumActorLeft;
-	frustumActorLeft->SetMapper(frustumMapperLeft);
-	frustumActorLeft->GetProperty()->EdgeVisibilityOff();
-	frustumActorLeft->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
-	frustumActorLeft->SetBackfaceProperty(backLeft);
-	frustumActorLeft->GetProperty()->SetOpacity(0.1);
+	RENDER_CAMERA_FRUSTUM(Left)
 
-	//cameraActorLeft->SetCamera(cameraLeft);
 	vtkNew<vtkRenderWindow> renWinLeft;
 	renWinLeft->SetWindowName("Left side camera image");
 	renWinLeft->SetSize(mLeft->mParams->ImageSize[0],mLeft->mParams->ImageSize[1]);
@@ -204,27 +225,8 @@ void StereoVision::Update()
 	cameraRightTransform->SetMatrix(cameraRightMatrix);
 	cameraRight->ApplyTransform(cameraRightTransform);
 	mPimpl->RenderCamera(cameraRightTransform, 2, &mPimpl->mRight);
-	double planesArrayRight[24];
-	cameraRight->GetFrustumPlanes(1.0, planesArrayRight);
-	vtkNew<vtkPlanes> planesRight;
-	planesRight->SetFrustumPlanes(planesArrayRight);
-	vtkNew<vtkFrustumSource> frustumRight;
-	frustumRight->ShowLinesOff();
-	frustumRight->SetPlanes(planesRight);
-	vtkNew<vtkShrinkPolyData> shrinkRight;
-	shrinkRight->SetInputConnection(frustumRight->GetOutputPort());
-	shrinkRight->SetShrinkFactor(0.9);
-	vtkNew<vtkPolyDataMapper> frustumMapperRight;
-	frustumMapperRight->SetInputConnection(shrinkRight->GetOutputPort());
-	vtkNew<vtkProperty> backRight;
-	backRight->SetColor(colors->GetColor3d("Tomato").GetData());
-	backRight->SetOpacity(0.1);
-	vtkNew<vtkActor> frustumActorRight;
-	frustumActorRight->SetMapper(frustumMapperRight);
-	frustumActorRight->GetProperty()->EdgeVisibilityOff();
-	frustumActorRight->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
-	frustumActorRight->SetBackfaceProperty(backLeft);
-	frustumActorRight->GetProperty()->SetOpacity(0.1);
+
+	RENDER_CAMERA_FRUSTUM(Right);
 	vtkNew<vtkRenderWindow> renWinRight;
 	renWinRight->SetWindowName("Right side camera image");
 	renWinRight->SetSize(mRight->mParams->ImageSize[0],mRight->mParams->ImageSize[1]);
@@ -271,25 +273,8 @@ void StereoVision::Update()
 	windowImageLeft->ReadFrontBufferOff();
 	windowImageLeft->Update();
 	//Get virtual image plane of left camera
-	vtkNew<vtkPlaneSource> planeLeft;
-	planeLeft->SetOrigin(-mLeft->mParams->ImageBoardSize[0] * 0.5, -mLeft->mParams->ImageBoardSize[0] * 0.5,mLeft->mParams->FocalLength);
-	planeLeft->SetPoint1(-mLeft->mParams->ImageBoardSize[0]*0.5, mLeft->mParams->ImageBoardSize[1]*0.5, mLeft->mParams->FocalLength);
-	planeLeft->SetPoint2(mLeft->mParams->ImageBoardSize[0]*0.5, -mLeft->mParams->ImageBoardSize[1]*0.5, mLeft->mParams->FocalLength);
-	vtkNew<vtkImageFlip> flipLeftImage;
-	flipLeftImage->SetInputData(windowImageLeft->GetOutput());
-	flipLeftImage->SetFilteredAxis(0);
-	vtkNew<vtkTexture> textureLeft;
-	textureLeft->SetInputConnection(flipLeftImage->GetOutputPort());
-	vtkNew<vtkTextureMapToPlane> texturePlaneLeft;
-	texturePlaneLeft->SetInputConnection(planeLeft->GetOutputPort());
-	vtkNew<vtkPolyDataMapper> planeMapperLeft;
-	planeMapperLeft->SetInputConnection(texturePlaneLeft->GetOutputPort());
-	vtkNew<vtkActor> texturedPlaneLeft;
-	texturedPlaneLeft->SetMapper(planeMapperLeft);
-	texturedPlaneLeft->SetTexture(textureLeft);
-	texturedPlaneLeft->GetProperty()->SetOpacity(0.5);
-	texturedPlaneLeft->AddPosition(cameraLeftTransform->GetPosition());
-	texturedPlaneLeft->AddOrientation(cameraLeftTransform->GetOrientation());
+	RENDER_TEXTURE_PLANE(Left);
+
 	renderer->AddActor(texturedPlaneLeft);
 
 	vtkNew<vtkImageLuminance> luminanceLeft;
@@ -302,25 +287,8 @@ void StereoVision::Update()
 	windowImageRight->ReadFrontBufferOff();
 	windowImageRight->Update();
 	//Get virtual image plane of right camera
-	vtkNew<vtkPlaneSource> planeRight;
-	planeRight->SetOrigin(-mRight->mParams->ImageBoardSize[0] * 0.5, -mRight->mParams->ImageBoardSize[1] * 0.5,mRight->mParams->FocalLength);
-	planeRight->SetPoint1(-mRight->mParams->ImageBoardSize[0] * 0.5, mRight->mParams->ImageBoardSize[1] * 0.5, mRight->mParams->FocalLength);
-	planeRight->SetPoint2(mRight->mParams->ImageBoardSize[0] * 0.5, -mRight->mParams->ImageBoardSize[1] * 0.5, mRight->mParams->FocalLength);
-	vtkNew<vtkImageFlip> flipRightImage;
-	flipRightImage->SetInputData(windowImageRight->GetOutput());
-	flipRightImage->SetFilteredAxis(0);
-	vtkNew<vtkTexture> textureRight;
-	textureRight->SetInputConnection(flipRightImage->GetOutputPort());
-	vtkNew<vtkTextureMapToPlane> texturePlaneRight;
-	texturePlaneRight->SetInputConnection(planeRight->GetOutputPort());
-	vtkNew<vtkPolyDataMapper> planeMapperRight;
-	planeMapperRight->SetInputConnection(texturePlaneRight->GetOutputPort());
-	vtkNew<vtkActor> texturedPlaneRight;
-	texturedPlaneRight->SetMapper(planeMapperRight);
-	texturedPlaneRight->SetTexture(textureRight);
-	texturedPlaneRight->GetProperty()->SetOpacity(0.5);
-	texturedPlaneRight->AddPosition(cameraRightTransform->GetPosition());
-	texturedPlaneRight->AddOrientation(cameraRightTransform->GetOrientation());
+	RENDER_TEXTURE_PLANE(Right);
+
 	renderer->AddActor(texturedPlaneRight);
 
 	vtkNew<vtkImageLuminance> luminanceRight;
