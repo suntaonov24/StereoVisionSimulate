@@ -40,46 +40,53 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 VTK_MODULE_INIT(vtkRenderingFreeType);
 
 #define RENDER_CAMERA_FRUSTUM(CameraID) double planesArray##CameraID[24];		\
-camera##CameraID->GetFrustumPlanes(1.0, planesArray##CameraID);				\
-vtkNew<vtkPlanes> planes##CameraID;									\
-planes##CameraID->SetFrustumPlanes(planesArray##CameraID);					\
-vtkNew<vtkFrustumSource> frustum##CameraID;							\
-frustum##CameraID->ShowLinesOff();									\
-frustum##CameraID->SetPlanes(planes##CameraID);								\
-vtkNew<vtkShrinkPolyData> shrink##CameraID;							\
-shrink##CameraID->SetInputConnection(frustum##CameraID->GetOutputPort());	\
-shrink##CameraID->SetShrinkFactor(0.9);								\
-vtkNew<vtkPolyDataMapper> frustumMapper##CameraID;					\
-frustumMapper##CameraID->SetInputConnection(shrink##CameraID->GetOutputPort());\
-vtkNew<vtkProperty> back##CameraID;									\
-back##CameraID->SetColor(colors->GetColor3d("Tomato").GetData());\
-back##CameraID->SetOpacity(0.1);								\
-vtkNew<vtkActor> frustumActor##CameraID;							\
-frustumActor##CameraID->SetMapper(frustumMapper##CameraID);				\
-frustumActor##CameraID->GetProperty()->EdgeVisibilityOff();\
-frustumActor##CameraID->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());\
-frustumActor##CameraID->SetBackfaceProperty(back##CameraID);		\
-frustumActor##CameraID->GetProperty()->SetOpacity(0.1);	
+	camera##CameraID->GetFrustumPlanes(1.0, planesArray##CameraID);				\
+	vtkNew<vtkPlanes> planes##CameraID;									\
+	planes##CameraID->SetFrustumPlanes(planesArray##CameraID);					\
+	vtkNew<vtkFrustumSource> frustum##CameraID;							\
+	frustum##CameraID->ShowLinesOff();									\
+	frustum##CameraID->SetPlanes(planes##CameraID);								\
+	vtkNew<vtkShrinkPolyData> shrink##CameraID;							\
+	shrink##CameraID->SetInputConnection(frustum##CameraID->GetOutputPort());	\
+	shrink##CameraID->SetShrinkFactor(0.9);								\
+	vtkNew<vtkPolyDataMapper> frustumMapper##CameraID;					\
+	frustumMapper##CameraID->SetInputConnection(shrink##CameraID->GetOutputPort());\
+	vtkNew<vtkProperty> back##CameraID;									\
+	back##CameraID->SetColor(colors->GetColor3d("Tomato").GetData());\
+	back##CameraID->SetOpacity(0.1);								\
+	vtkNew<vtkActor> frustumActor##CameraID;							\
+	frustumActor##CameraID->SetMapper(frustumMapper##CameraID);				\
+	frustumActor##CameraID->GetProperty()->EdgeVisibilityOff();\
+	frustumActor##CameraID->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());\
+	frustumActor##CameraID->SetBackfaceProperty(back##CameraID);		\
+	frustumActor##CameraID->GetProperty()->SetOpacity(0.1);	
 
 #define RENDER_TEXTURE_PLANE(CameraID) vtkNew<vtkPlaneSource> plane##CameraID;					\
-plane##CameraID->SetOrigin(-m##CameraID->mParams->ImageBoardSize[0] * 0.5, -m##CameraID->mParams->ImageBoardSize[0] * 0.5, m##CameraID->mParams->FocalLength);\
-plane##CameraID->SetPoint1(-m##CameraID->mParams->ImageBoardSize[0] * 0.5, m##CameraID->mParams->ImageBoardSize[1] * 0.5, m##CameraID->mParams->FocalLength);\
-plane##CameraID->SetPoint2(m##CameraID->mParams->ImageBoardSize[0] * 0.5, -m##CameraID->mParams->ImageBoardSize[1] * 0.5, m##CameraID->mParams->FocalLength);\
-vtkNew<vtkImageFlip> flip##CameraID##Image;												\
-flip##CameraID##Image->SetInputData(windowImage##CameraID->GetOutput());		\
-flip##CameraID##Image->SetFilteredAxis(0);									\
-vtkNew<vtkTexture> texture##CameraID;										\
-texture##CameraID->SetInputConnection(flip##CameraID##Image->GetOutputPort());\
-vtkNew<vtkTextureMapToPlane> texturePlane##CameraID;						\
-texturePlane##CameraID->SetInputConnection(plane##CameraID->GetOutputPort());\
-vtkNew<vtkPolyDataMapper> planeMapper##CameraID;								\
-planeMapper##CameraID->SetInputConnection(texturePlane##CameraID->GetOutputPort());\
-vtkNew<vtkActor> texturedPlane##CameraID;												\
-texturedPlane##CameraID->SetMapper(planeMapper##CameraID);								\
-texturedPlane##CameraID->SetTexture(texture##CameraID);								\
-texturedPlane##CameraID->GetProperty()->SetOpacity(0.5);							\
-texturedPlane##CameraID->AddPosition(camera##CameraID##Transform->GetPosition());		\
-texturedPlane##CameraID->AddOrientation(camera##CameraID##Transform->GetOrientation());
+	plane##CameraID->SetOrigin(-m##CameraID->mParams->ImageBoardSize[0] * 0.5, -m##CameraID->mParams->ImageBoardSize[0] * 0.5, m##CameraID->mParams->FocalLength);\
+	plane##CameraID->SetPoint1(-m##CameraID->mParams->ImageBoardSize[0] * 0.5, m##CameraID->mParams->ImageBoardSize[1] * 0.5, m##CameraID->mParams->FocalLength);\
+	plane##CameraID->SetPoint2(m##CameraID->mParams->ImageBoardSize[0] * 0.5, -m##CameraID->mParams->ImageBoardSize[1] * 0.5, m##CameraID->mParams->FocalLength);\
+	vtkNew<vtkImageFlip> flip##CameraID##Image;												\
+	flip##CameraID##Image->SetInputData(windowImage##CameraID->GetOutput());		\
+	flip##CameraID##Image->SetFilteredAxis(0);									\
+	vtkNew<vtkTexture> texture##CameraID;										\
+	texture##CameraID->SetInputConnection(flip##CameraID##Image->GetOutputPort());\
+	vtkNew<vtkTextureMapToPlane> texturePlane##CameraID;						\
+	texturePlane##CameraID->SetInputConnection(plane##CameraID->GetOutputPort());\
+	vtkNew<vtkPolyDataMapper> planeMapper##CameraID;								\
+	planeMapper##CameraID->SetInputConnection(texturePlane##CameraID->GetOutputPort());\
+	vtkNew<vtkActor> texturedPlane##CameraID;												\
+	texturedPlane##CameraID->SetMapper(planeMapper##CameraID);								\
+	texturedPlane##CameraID->SetTexture(texture##CameraID);								\
+	texturedPlane##CameraID->GetProperty()->SetOpacity(0.5);							\
+	texturedPlane##CameraID->AddPosition(camera##CameraID##Transform->GetPosition());		\
+	texturedPlane##CameraID->AddOrientation(camera##CameraID##Transform->GetOrientation());
+#define ARRAY_TO_VTK4X4MATRIX(a,b) for (unsigned int i = 0; i < 4; ++i)\
+{																				\
+	for (unsigned int j = 0; j < 4; ++j)\
+	{																			\
+		a->SetElement(i, j, b[4 * i + j]);\
+	}																			\
+}
 
 struct ModelObject
 {
@@ -121,6 +128,15 @@ public:
 		camera->cameraActor->SetOrientation(0,0,90);
 		camera->cameraActor->AddPosition(transform->GetPosition());
 		camera->cameraActor->AddOrientation(transform->GetOrientation());
+	}
+	void ConfigureCameraParams(vtkCamera* camera, float* internalMatrix, float focalLength, unsigned int* imageSize, float* clippingRange)
+	{
+		camera->SetPosition(0, 0, 0);
+		camera->SetViewUp(0, 1, 0);
+		camera->SetFocalPoint(0,0,focalLength);
+		double view_angle = 2.0 * atan(0.5 * imageSize[0] / internalMatrix[0]) * 180.0 / PI;
+		camera->SetViewAngle(view_angle);
+		camera->SetClippingRange(clippingRange[0],clippingRange[1]);
 	}
 };
 
@@ -172,21 +188,9 @@ void StereoVision::Update()
 	vtkNew<vtkCamera> cameraLeft;
 	//Set Left camera parameters
 	float* externalMatrix_l = mLeft->GetExternalMatrix();
-	cameraLeft->SetPosition(0, 0, 0);
-	cameraLeft->SetViewUp(0, 1, 0);
-	cameraLeft->SetFocalPoint(0, 0, mLeft->mParams->FocalLength);
-	float* internalMatrix_l = mLeft->GetInternalMatrix();
-	double viewAngle_l = 2.0*atan(0.5*mLeft->mParams->ImageSize[0]/ internalMatrix_l[0])*180.0/PI;
-	cameraLeft->SetViewAngle(viewAngle_l);
-	cameraLeft->SetClippingRange(mLeft->mParams->ClippingRange[0], mLeft->mParams->ClippingRange[1]);
+	mPimpl->ConfigureCameraParams(cameraLeft,mLeft->GetInternalMatrix(),mLeft->mParams->FocalLength,mLeft->mParams->ImageSize,mLeft->mParams->ClippingRange);
 	vtkNew<vtkMatrix4x4> cameraLeftMatrix;
-	for (unsigned int i = 0; i < 4; ++i)
-	{
-		for (unsigned int j = 0; j < 4; ++j)
-		{
-			cameraLeftMatrix->SetElement(i, j, externalMatrix_l[4 * i + j]);
-		}
-	}
+	ARRAY_TO_VTK4X4MATRIX(cameraLeftMatrix, externalMatrix_l);
 	cameraLeftMatrix->Invert();
 	vtkNew<vtkTransform> cameraLeftTransform;
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
@@ -205,21 +209,9 @@ void StereoVision::Update()
 	vtkNew<vtkCamera> cameraRight;
 	//Set Right camera parameters
 	float* externalMatrix_r = mRight->GetExternalMatrix();
-	cameraRight->SetPosition(0, 0, 0);
-	cameraRight->SetViewUp(0, 1, 0);
-	cameraRight->SetFocalPoint(0, 0, mRight->mParams->FocalLength);
-	cameraRight->SetClippingRange(mRight->mParams->ClippingRange[0], mRight->mParams->ClippingRange[1]);
-	float* internalMatrix_r = mRight->GetInternalMatrix();
-	double viewAngle_r = 2.0*atan(0.5* mRight->mParams->ImageSize[0]/ internalMatrix_r[0])*180.0/PI;
-	cameraRight->SetViewAngle(viewAngle_r);
+	mPimpl->ConfigureCameraParams(cameraRight,mRight->GetInternalMatrix(),mRight->mParams->FocalLength,mRight->mParams->ImageSize,mRight->mParams->ClippingRange);
 	vtkNew<vtkMatrix4x4> cameraRightMatrix;
-	for (unsigned int i = 0; i < 4; ++i)
-	{
-		for (unsigned int j = 0; j < 4; ++j)
-		{
-			cameraRightMatrix->SetElement(i, j, externalMatrix_r[4 * i + j]);
-		}
-	}
+	ARRAY_TO_VTK4X4MATRIX(cameraRightMatrix, externalMatrix_r);
 	cameraRightMatrix->Invert();
 	vtkNew<vtkTransform> cameraRightTransform;
 	cameraRightTransform->SetMatrix(cameraRightMatrix);
