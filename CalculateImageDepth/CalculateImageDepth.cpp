@@ -9,6 +9,20 @@
 #include <opencv2/calib3d.hpp>
 #include <vector>
 
+#define ARRAY_TO_4X4MAT(a,b) for (unsigned int i = 0; i < 4; ++i)\
+		{														\
+			for (unsigned int j = 0; j < 4; ++j)						\
+			{														\
+			a.at<float>(i, j) = b[4 * i + j];\
+			}																			\
+		}
+#define GetRotationMatrix(a,b) for (unsigned int i = 0; i < 3; ++i)\
+		{\
+			for (unsigned int j = 0; j < 3; ++j)\
+			{\
+				a.at<float>(i, j) = b.at<float>(i, j);\
+			}\
+		}
 CalculateImageDepth::CalculateImageDepth()
 {
 	mStereoVision = new StereoVision;
@@ -99,25 +113,13 @@ void CalculateImageDepth::Update()
 		cv::Mat rotation_r(3, 3, CV_32FC1);
 		cv::Mat rotation_translation_l(4,4,CV_32FC1);
 		cv::Mat rotation_translation_r(4,4,CV_32FC1);
-		for (unsigned int i = 0; i < 4; ++i)
-		{
-			for (unsigned int j = 0; j < 4; ++j)
-			{
-				rotation_translation_l.at<float>(i, j) = externalMatrix_l[4 * i + j];
-				rotation_translation_r.at<float>(i, j) = externalMatrix_r[4 * i + j];
-			}
-		}
+		ARRAY_TO_4X4MAT(rotation_translation_l, externalMatrix_l);
+		ARRAY_TO_4X4MAT(rotation_translation_r, externalMatrix_r);
 		rotation_translation_l = rotation_translation_l.inv();
 		rotation_translation_r = rotation_translation_r.inv();
 		rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
 		cv::Mat translation(3, 1, CV_32FC1);
-		for (unsigned int i = 0; i < 3; ++i)
-		{
-			for (unsigned int j = 0; j < 3; ++j)
-			{
-				rotation_l.at<float>(i, j) = rotation_translation_l.at<float>(i,j);
-			}
-		}
+		GetRotationMatrix(rotation_l, rotation_translation_l);
 		translation.at<float>(0) = rotation_translation_l.at<float>(0,3);
 		translation.at<float>(1) = rotation_translation_l.at<float>(1,3);
 		translation.at<float>(2) = rotation_translation_l.at<float>(2,3);
@@ -183,13 +185,7 @@ void CalculateImageDepth::Update()
 		actor->actor->SetMapper(actor->mapper);
 		actor->actor->GetProperty()->SetColor(actor->colors->GetColor3d("Salmon").GetData());
 		vtkNew<vtkMatrix4x4> externalMatrix_l_;
-		for (unsigned int i = 0; i < 4; ++i)
-		{
-			for (unsigned int j = 0; j < 4; ++j)
-			{
-				externalMatrix_l_->SetElement(i, j, externalMatrix_l[4 * i + j]);
-			}
-		}
+		ARRAY_TO_VTK4X4MATRIX(externalMatrix_l_, externalMatrix_l);
 		externalMatrix_l_->Invert();
 		vtkNew<vtkMatrix4x4> cameraRectifiedMatrix;
 		cameraRectifiedMatrix->Identity();

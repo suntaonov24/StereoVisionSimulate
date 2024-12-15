@@ -80,13 +80,6 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 	texturedPlane##CameraID->GetProperty()->SetOpacity(0.5);							\
 	texturedPlane##CameraID->AddPosition(camera##CameraID##Transform->GetPosition());		\
 	texturedPlane##CameraID->AddOrientation(camera##CameraID##Transform->GetOrientation());
-#define ARRAY_TO_VTK4X4MATRIX(a,b) for (unsigned int i = 0; i < 4; ++i)\
-{																				\
-	for (unsigned int j = 0; j < 4; ++j)\
-	{																			\
-		a->SetElement(i, j, b[4 * i + j]);\
-	}																			\
-}
 
 struct ModelObject
 {

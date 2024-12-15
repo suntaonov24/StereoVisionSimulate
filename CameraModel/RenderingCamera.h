@@ -26,6 +26,13 @@ struct ReconActor
 	vtkSmartPointer<vtkRenderer> render;
 	vtkSmartPointer<vtkRenderWindow> renWin;
 };
+#define ARRAY_TO_VTK4X4MATRIX(a,b) for (unsigned int i = 0; i < 4; ++i)\
+{																				\
+	for (unsigned int j = 0; j < 4; ++j)\
+	{																			\
+		a->SetElement(i, j, b[4 * i + j]);\
+	}																			\
+}
 class StereoVisionImpl;
 class __EXPORT_API__ StereoVision
 {
