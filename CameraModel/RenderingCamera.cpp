@@ -81,6 +81,16 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 	texturedPlane##CameraID->AddPosition(camera##CameraID##Transform->GetPosition());		\
 	texturedPlane##CameraID->AddOrientation(camera##CameraID##Transform->GetOrientation());
 
+#define GetImageFromRenderWindow(CameraID) vtkNew<vtkWindowToImageFilter> windowImage##CameraID; \
+	windowImage##CameraID->SetInput(renWin##CameraID);						\
+	windowImage##CameraID->SetScale(1);									\
+	windowImage##CameraID->SetInputBufferTypeToRGB();							\
+	windowImage##CameraID->ReadFrontBufferOff();							\
+	windowImage##CameraID->Update();										\
+	vtkNew<vtkImageLuminance> luminance##CameraID;							\
+	luminance##CameraID->SetInputData(windowImage##CameraID->GetOutput());			\
+	luminance##CameraID->Update();
+
 struct ModelObject
 {
 	vtkNew<vtkOBJReader> reader;
@@ -251,34 +261,16 @@ void StereoVision::Update()
 	renWinLeft->Render();
 	renWinRight->Render();
 	//Get renderer window image
-	vtkNew<vtkWindowToImageFilter> windowImageLeft;
-	windowImageLeft->SetInput(renWinLeft);
-	windowImageLeft->SetScale(1);
-	windowImageLeft->SetInputBufferTypeToRGB();
-	windowImageLeft->ReadFrontBufferOff();
-	windowImageLeft->Update();
+	GetImageFromRenderWindow(Left);
 	//Get virtual image plane of left camera
 	RENDER_TEXTURE_PLANE(Left);
-
 	renderer->AddActor(texturedPlaneLeft);
 
-	vtkNew<vtkImageLuminance> luminanceLeft;
-	luminanceLeft->SetInputData(windowImageLeft->GetOutput());
-	luminanceLeft->Update();
-	vtkNew<vtkWindowToImageFilter> windowImageRight;
-	windowImageRight->SetInput(renWinRight);
-	windowImageRight->SetScale(1);
-	windowImageRight->SetInputBufferTypeToRGB();
-	windowImageRight->ReadFrontBufferOff();
-	windowImageRight->Update();
+	GetImageFromRenderWindow(Right);
 	//Get virtual image plane of right camera
 	RENDER_TEXTURE_PLANE(Right);
-
 	renderer->AddActor(texturedPlaneRight);
 
-	vtkNew<vtkImageLuminance> luminanceRight;
-	luminanceRight->SetInputData(windowImageRight->GetOutput());
-	luminanceRight->Update();
 	if (mFunc != nullptr)
 	{
 		mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);

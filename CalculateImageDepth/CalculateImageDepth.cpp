@@ -125,14 +125,7 @@ void CalculateImageDepth::Update()
 		translation.at<float>(2) = rotation_translation_l.at<float>(2,3);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
-		try
-		{
-			cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_l, translation, R1, R2, P1, P2, Q);
-		}
-		catch (cv::Exception& error)
-		{
-			std::cout << error.what() << std::endl;
-		}
+		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_l, translation, R1, R2, P1, P2, Q);
 		cv::Mat mapLeftx, mapLefty;
 		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
 		cv::Mat mapRightx, mapRighty;
@@ -149,7 +142,7 @@ void CalculateImageDepth::Update()
 			cv::namedWindow("rectifiedImageRight");
 			cv::imshow("rectifiedImageRight", rightImage_);
 		}
-		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(96, 9);
+		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(48, 9);
 		cv::Mat disparity;
 		try
 		{
