@@ -193,7 +193,7 @@ void StereoVision::Update()
 	float* externalMatrix_l = mLeft->GetExternalMatrix();
 	mPimpl->ConfigureCameraParams(cameraLeft,mLeft->GetInternalMatrix(),mLeft->mParams->FocalLength,mLeft->mParams->ImageSize,mLeft->mParams->ClippingRange);
 	vtkNew<vtkMatrix4x4> cameraLeftMatrix;
-	ARRAY_TO_VTK4X4MATRIX(cameraLeftMatrix, externalMatrix_l);
+	ARRAY_TO_VTK4X4MATRIX(cameraLeftMatrix, externalMatrix_l,4,4);
 	cameraLeftMatrix->Invert();
 	vtkNew<vtkTransform> cameraLeftTransform;
 	cameraLeftTransform->SetMatrix(cameraLeftMatrix);
@@ -214,7 +214,7 @@ void StereoVision::Update()
 	float* externalMatrix_r = mRight->GetExternalMatrix();
 	mPimpl->ConfigureCameraParams(cameraRight,mRight->GetInternalMatrix(),mRight->mParams->FocalLength,mRight->mParams->ImageSize,mRight->mParams->ClippingRange);
 	vtkNew<vtkMatrix4x4> cameraRightMatrix;
-	ARRAY_TO_VTK4X4MATRIX(cameraRightMatrix, externalMatrix_r);
+	ARRAY_TO_VTK4X4MATRIX(cameraRightMatrix, externalMatrix_r,4,4);
 	cameraRightMatrix->Invert();
 	vtkNew<vtkTransform> cameraRightTransform;
 	cameraRightTransform->SetMatrix(cameraRightMatrix);

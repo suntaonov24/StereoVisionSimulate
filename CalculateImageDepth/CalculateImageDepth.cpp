@@ -16,6 +16,13 @@
 			a.at<float>(i, j) = b[4 * i + j];\
 			}																			\
 		}
+#define MAT_TO_VTKMATRIX(a,b,m,n)for (unsigned int i = 0; i < m; ++i)\
+		{																		\
+			for (unsigned int j = 0; j < n; ++j)									\
+			{																	\
+				a->SetElement(i, j, b.at<double>(i, j));\
+			}																		\
+		}
 #define GetRotationMatrix(a,b) for (unsigned int i = 0; i < 3; ++i)\
 		{\
 			for (unsigned int j = 0; j < 3; ++j)\
@@ -144,14 +151,7 @@ void CalculateImageDepth::Update()
 		}
 		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(48, 9);
 		cv::Mat disparity;
-		try
-		{
-			stereo->compute(leftImage_, rightImage_, disparity);
-		}
-		catch (cv::Exception& error)
-		{
-			std::cout << error.what() << std::endl;
-		}
+		stereo->compute(leftImage_, rightImage_, disparity);
 		disparity = disparity / 16.0;
 		if (debug)
 		{
@@ -178,17 +178,11 @@ void CalculateImageDepth::Update()
 		actor->actor->SetMapper(actor->mapper);
 		actor->actor->GetProperty()->SetColor(actor->colors->GetColor3d("Salmon").GetData());
 		vtkNew<vtkMatrix4x4> externalMatrix_l_;
-		ARRAY_TO_VTK4X4MATRIX(externalMatrix_l_, externalMatrix_l);
+		ARRAY_TO_VTK4X4MATRIX(externalMatrix_l_, externalMatrix_l,4,4);
 		externalMatrix_l_->Invert();
 		vtkNew<vtkMatrix4x4> cameraRectifiedMatrix;
 		cameraRectifiedMatrix->Identity();
-		for (unsigned int i = 0; i < 3; ++i)
-		{
-			for (unsigned int j = 0; j < 3; ++j)
-			{
-				cameraRectifiedMatrix->SetElement(i,j,R1.at<double>(i,j));
-			}
-		}
+		MAT_TO_VTKMATRIX(cameraRectifiedMatrix, R1,3,3);
 		cameraRectifiedMatrix->Invert();
 		vtkMatrix4x4::Multiply4x4(cameraRectifiedMatrix, externalMatrix_l_, externalMatrix_l_);
 		vtkNew<vtkTransform> externalTransform_l;

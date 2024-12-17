@@ -26,9 +26,9 @@ struct ReconActor
 	vtkSmartPointer<vtkRenderer> render;
 	vtkSmartPointer<vtkRenderWindow> renWin;
 };
-#define ARRAY_TO_VTK4X4MATRIX(a,b) for (unsigned int i = 0; i < 4; ++i)\
+#define ARRAY_TO_VTK4X4MATRIX(a,b,m,n) for (unsigned int i = 0; i < m; ++i)\
 {																				\
-	for (unsigned int j = 0; j < 4; ++j)\
+	for (unsigned int j = 0; j < n; ++j)\
 	{																			\
 		a->SetElement(i, j, b[4 * i + j]);\
 	}																			\
