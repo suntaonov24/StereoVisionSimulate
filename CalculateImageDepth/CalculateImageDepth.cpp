@@ -122,11 +122,15 @@ void CalculateImageDepth::Update()
 		cv::Mat rotation_translation_r(4,4,CV_32FC1);
 		ARRAY_TO_4X4MAT(rotation_translation_l, externalMatrix_l);
 		ARRAY_TO_4X4MAT(rotation_translation_r, externalMatrix_r);
+		//Transformation matrix from camera coordinate to world coordinate (inverse of external matrix)
 		rotation_translation_l = rotation_translation_l.inv();
 		rotation_translation_r = rotation_translation_r.inv();
-		rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
-		cv::Mat translation(3, 1, CV_32FC1);
+
+		//rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
+		GetRotationMatrix(rotation_r, rotation_translation_r);
 		GetRotationMatrix(rotation_l, rotation_translation_l);
+		rotation_l = rotation_l * rotation_r.inv();
+		cv::Mat translation(3, 1, CV_32FC1);
 		translation.at<float>(0) = rotation_translation_l.at<float>(0,3);
 		translation.at<float>(1) = rotation_translation_l.at<float>(1,3);
 		translation.at<float>(2) = rotation_translation_l.at<float>(2,3);
