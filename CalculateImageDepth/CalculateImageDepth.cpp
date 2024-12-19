@@ -2,6 +2,9 @@
 #include "../CameraModel/RenderingCamera.h"
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
+#include <vtkArrowSource.h>
+#include <vtkSphereSource.h>
+#include <vtkPolyDataMapper.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -30,6 +33,18 @@
 				a.at<float>(i, j) = b.at<float>(i, j);\
 			}\
 		}
+#define ARROW_FOR_DEBUG(transform,matrix,arrowSource, mapper, arrowActor) vtkNew<vtkTransform> transform;\
+	transform->SetMatrix(matrix);				\
+	vtkNew<vtkArrowSource> arrowSource;						\
+	arrowSource->Update();									\
+	vtkNew<vtkPolyDataMapper> mapper;				\
+	mapper->SetInputConnection(arrowSource->GetOutputPort());\
+	vtkNew<vtkActor> arrowActor;										\
+	arrowActor->SetPosition(transform->GetPosition());			\
+	arrowActor->SetOrientation(transform->GetOrientation());		\
+	arrowActor->SetMapper(mapper);							\
+	arrowActor->SetScale(50);
+
 CalculateImageDepth::CalculateImageDepth()
 {
 	mStereoVision = new StereoVision;
@@ -125,7 +140,10 @@ void CalculateImageDepth::Update()
 		//Transformation matrix from camera coordinate to world coordinate (inverse of external matrix)
 		rotation_translation_l = rotation_translation_l.inv();
 		rotation_translation_r = rotation_translation_r.inv();
-
+		vtkNew<vtkMatrix4x4> arrowMatrix1;
+		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
+		ARROW_FOR_DEBUG(arrowTransform,arrowMatrix1,arrowSource,arrowMapper,arrowActor);
+		actor->render->AddActor(arrowActor);
 		//rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r);
 		GetRotationMatrix(rotation_l, rotation_translation_l);
