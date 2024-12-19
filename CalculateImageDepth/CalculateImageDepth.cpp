@@ -144,7 +144,6 @@ void CalculateImageDepth::Update()
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
 		ARROW_FOR_DEBUG(arrowTransform,arrowMatrix1,arrowSource,arrowMapper,arrowActor);
 		actor->render->AddActor(arrowActor);
-		//rotation_translation_l = rotation_translation_l * rotation_translation_r.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r);
 		GetRotationMatrix(rotation_l, rotation_translation_l);
 		rotation_l = rotation_l * rotation_r.inv();
