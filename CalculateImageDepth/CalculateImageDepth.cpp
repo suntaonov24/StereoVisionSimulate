@@ -43,7 +43,7 @@
 	arrowActor->SetPosition(transform->GetPosition());			\
 	arrowActor->SetOrientation(transform->GetOrientation());		\
 	arrowActor->SetMapper(mapper);							\
-	arrowActor->SetScale(50);
+	arrowActor->SetScale(10);
 
 CalculateImageDepth::CalculateImageDepth()
 {
@@ -142,8 +142,14 @@ void CalculateImageDepth::Update()
 		rotation_translation_r = rotation_translation_r.inv();
 		vtkNew<vtkMatrix4x4> arrowMatrix1;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
-		ARROW_FOR_DEBUG(arrowTransform,arrowMatrix1,arrowSource,arrowMapper,arrowActor);
-		actor->render->AddActor(arrowActor);
+		arrowMatrix1->Invert();
+		ARROW_FOR_DEBUG(arrowTransform1,arrowMatrix1,arrowSource1,arrowMapper1,arrowActor1);
+		actor->render->AddActor(arrowActor1);
+		vtkNew<vtkMatrix4x4> arrowMatrix2;
+		ARRAY_TO_VTK4X4MATRIX(arrowMatrix2, externalMatrix_r, 4, 4);
+		arrowMatrix2->Invert();
+		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2, arrowMapper2, arrowActor2);
+		actor->render->AddActor(arrowActor2);
 		GetRotationMatrix(rotation_r, rotation_translation_r);
 		GetRotationMatrix(rotation_l, rotation_translation_l);
 		rotation_l = rotation_l * rotation_r.inv();
