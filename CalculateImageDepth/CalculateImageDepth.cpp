@@ -150,16 +150,25 @@ void CalculateImageDepth::Update()
 		arrowMatrix2->Invert();
 		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2, arrowMapper2, arrowActor2);
 		actor->render->AddActor(arrowActor2);
+		rotation_translation_r = rotation_translation_r * rotation_translation_l.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r);
-		GetRotationMatrix(rotation_l, rotation_translation_l);
-		rotation_l = rotation_l * rotation_r.inv();
 		cv::Mat translation(3, 1, CV_32FC1);
-		translation.at<float>(0) = rotation_translation_l.at<float>(0,3);
-		translation.at<float>(1) = rotation_translation_l.at<float>(1,3);
-		translation.at<float>(2) = rotation_translation_l.at<float>(2,3);
+		translation.at<float>(0) = rotation_translation_r.at<float>(0,3);
+		translation.at<float>(1) = rotation_translation_r.at<float>(1,3);
+		translation.at<float>(2) = rotation_translation_r.at<float>(2,3);
+		vtkNew<vtkMatrix4x4> arrowMatrix3;
+		for (unsigned int i = 0; i < 4; ++i)
+		{
+			for (unsigned int j = 0; j < 4; ++j)
+			{
+				arrowMatrix3->SetElement(i, j, rotation_translation_r.at<float>(i, j));
+			}
+		}
+		ARROW_FOR_DEBUG(arrowTransform3, arrowMatrix3, arrowSource3, arrowMapper3, arrowActor3);
+		actor->render->AddActor(arrowActor3);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
-		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_l, translation, R1, R2, P1, P2, Q);
+		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
 		cv::Mat mapLeftx, mapLefty;
 		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
 		cv::Mat mapRightx, mapRighty;
