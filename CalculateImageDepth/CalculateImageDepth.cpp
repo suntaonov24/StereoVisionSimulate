@@ -5,6 +5,7 @@
 #include <vtkArrowSource.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkNamedColors.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -33,7 +34,8 @@
 				a.at<float>(i, j) = b.at<float>(i, j);\
 			}\
 		}
-#define ARROW_FOR_DEBUG(transform,matrix,arrowSource, mapper, arrowActor) vtkNew<vtkTransform> transform;\
+#define ARROW_FOR_DEBUG(transform,matrix,arrowSource, mapper, arrowActor,scale,opacity,colors,colorName) vtkNew<vtkTransform> transform;\
+	vtkNew<vtkNamedColors> colors;			\
 	transform->SetMatrix(matrix);				\
 	vtkNew<vtkArrowSource> arrowSource;						\
 	arrowSource->Update();									\
@@ -43,7 +45,9 @@
 	arrowActor->SetPosition(transform->GetPosition());			\
 	arrowActor->SetOrientation(transform->GetOrientation());		\
 	arrowActor->SetMapper(mapper);							\
-	arrowActor->SetScale(10);
+	arrowActor->SetScale(scale);							\
+	arrowActor->GetProperty()->SetOpacity(opacity);				\
+	arrowActor->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());
 
 CalculateImageDepth::CalculateImageDepth()
 {
@@ -143,12 +147,12 @@ void CalculateImageDepth::Update()
 		vtkNew<vtkMatrix4x4> arrowMatrix1;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
 		arrowMatrix1->Invert();
-		ARROW_FOR_DEBUG(arrowTransform1,arrowMatrix1,arrowSource1,arrowMapper1,arrowActor1);
+		ARROW_FOR_DEBUG(arrowTransform1,arrowMatrix1,arrowSource1,arrowMapper1,arrowActor1,10,0.5,colors1,"Blue");
 		actor->render->AddActor(arrowActor1);
 		vtkNew<vtkMatrix4x4> arrowMatrix2;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix2, externalMatrix_r, 4, 4);
 		arrowMatrix2->Invert();
-		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2, arrowMapper2, arrowActor2);
+		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2, arrowMapper2, arrowActor2,10,0.5, colors2,"Cyan");
 		actor->render->AddActor(arrowActor2);
 		rotation_translation_r = rotation_translation_r * rotation_translation_l.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r);
@@ -164,7 +168,8 @@ void CalculateImageDepth::Update()
 				arrowMatrix3->SetElement(i, j, rotation_translation_r.at<float>(i, j));
 			}
 		}
-		ARROW_FOR_DEBUG(arrowTransform3, arrowMatrix3, arrowSource3, arrowMapper3, arrowActor3);
+		vtkMatrix4x4::Multiply4x4(arrowMatrix3,arrowMatrix1, arrowMatrix3);
+		ARROW_FOR_DEBUG(arrowTransform3, arrowMatrix3, arrowSource3, arrowMapper3, arrowActor3,20,0.5, colors3,"Magenta");
 		actor->render->AddActor(arrowActor3);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
