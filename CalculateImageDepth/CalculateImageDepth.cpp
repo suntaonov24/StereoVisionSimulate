@@ -174,6 +174,15 @@ void CalculateImageDepth::Update()
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
 		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
+		vtkNew<vtkMatrix4x4> R1_,R2_;
+		R1_->Identity();
+		R2_->Identity();
+		MAT_TO_VTKMATRIX(R1_, R1, 3, 3);
+		MAT_TO_VTKMATRIX(R2_, R2, 3, 3);
+		ARROW_FOR_DEBUG(arrowTransform4,R1_,arrowSource4,arrowMapper4,arrowActor4,20,1,colors4,"tomato");
+		actor->render->AddActor(arrowActor4);
+		ARROW_FOR_DEBUG(arrowTransform5,R2_,arrowSource5,arrowMapper5,arrowActor5,20,1,colors5,"navy");
+		actor->render->AddActor(arrowActor5);
 		cv::Mat mapLeftx, mapLefty;
 		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
 		cv::Mat mapRightx, mapRighty;
