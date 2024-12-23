@@ -154,12 +154,12 @@ void CalculateImageDepth::Update()
 		arrowMatrix2->Invert();
 		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2, arrowMapper2, arrowActor2,10,0.5, colors2,"Cyan");
 		actor->render->AddActor(arrowActor2);
-		rotation_translation_r = rotation_translation_r * rotation_translation_l.inv();
-		GetRotationMatrix(rotation_r, rotation_translation_r);
+		cv::Mat rotation_translation_r1 = rotation_translation_r * rotation_translation_l.inv();
+		GetRotationMatrix(rotation_r, rotation_translation_r1);
 		cv::Mat translation(3, 1, CV_32FC1);
-		translation.at<float>(0) = rotation_translation_r.at<float>(0,3);
-		translation.at<float>(1) = rotation_translation_r.at<float>(1,3);
-		translation.at<float>(2) = rotation_translation_r.at<float>(2,3);
+		translation.at<float>(0) = rotation_translation_r1.at<float>(0,3);
+		translation.at<float>(1) = rotation_translation_r1.at<float>(1,3);
+		translation.at<float>(2) = rotation_translation_r1.at<float>(2,3);
 		vtkNew<vtkMatrix4x4> arrowMatrix3;
 		for (unsigned int i = 0; i < 4; ++i)
 		{
@@ -179,6 +179,12 @@ void CalculateImageDepth::Update()
 		R2_->Identity();
 		MAT_TO_VTKMATRIX(R1_, R1, 3, 3);
 		MAT_TO_VTKMATRIX(R2_, R2, 3, 3);
+		R1_->SetElement(0, 3, rotation_translation_l.at<float>(0,3));
+		R1_->SetElement(1, 3, rotation_translation_l.at<float>(1,3));
+		R1_->SetElement(2, 3, rotation_translation_l.at<float>(2,3));
+		R2_->SetElement(0, 3, rotation_translation_r.at<float>(0,3));
+		R2_->SetElement(1, 3, rotation_translation_r.at<float>(1,3));
+		R2_->SetElement(2, 3, rotation_translation_r.at<float>(2,3));
 		ARROW_FOR_DEBUG(arrowTransform4,R1_,arrowSource4,arrowMapper4,arrowActor4,20,1,colors4,"tomato");
 		actor->render->AddActor(arrowActor4);
 		ARROW_FOR_DEBUG(arrowTransform5,R2_,arrowSource5,arrowMapper5,arrowActor5,20,1,colors5,"navy");
