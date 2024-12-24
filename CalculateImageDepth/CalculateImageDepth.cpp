@@ -41,13 +41,33 @@
 	arrowSource->Update();									\
 	vtkNew<vtkPolyDataMapper> mapper;				\
 	mapper->SetInputConnection(arrowSource->GetOutputPort());\
-	vtkNew<vtkActor> arrowActor;										\
-	arrowActor->SetPosition(transform->GetPosition());			\
-	arrowActor->SetOrientation(transform->GetOrientation());		\
-	arrowActor->SetMapper(mapper);							\
-	arrowActor->SetScale(scale);							\
-	arrowActor->GetProperty()->SetOpacity(opacity);				\
-	arrowActor->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());
+	vtkNew<vtkActor> arrowActor##X;	\
+	arrowActor##X->SetPosition(0,0,0);	\
+	arrowActor##X->SetOrientation(1,0,0);	\
+	arrowActor##X->AddPosition(transform->GetPosition());			\
+	arrowActor##X->AddOrientation(transform->GetOrientation());		\
+	arrowActor##X->SetMapper(mapper);							\
+	arrowActor##X->SetScale(scale);							\
+	arrowActor##X->GetProperty()->SetOpacity(opacity);				\
+	arrowActor##X->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());\
+	vtkNew<vtkActor> arrowActor##Y;										\
+	arrowActor##Y->SetPosition(0,0,0);			\
+	arrowActor##Y->SetOrientation(0,1,0);		\
+	arrowActor##Y->AddPosition(transform->GetPosition());			\
+	arrowActor##Y->AddOrientation(transform->GetOrientation());		\
+	arrowActor##Y->SetMapper(mapper);							\
+	arrowActor##Y->SetScale(scale);							\
+	arrowActor##Y->GetProperty()->SetOpacity(opacity);				\
+	arrowActor##Y->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());\
+	vtkNew<vtkActor> arrowActor##Z;										\
+	arrowActor##Z->SetPosition(0,0,0);			\
+	arrowActor##Z->SetOrientation(0,0,1);		\
+	arrowActor##Z->AddPosition(transform->GetPosition());			\
+	arrowActor##Z->AddOrientation(transform->GetOrientation());		\
+	arrowActor##Z->SetMapper(mapper);							\
+	arrowActor##Z->SetScale(scale);							\
+	arrowActor##Z->GetProperty()->SetOpacity(opacity);				\
+	arrowActor##Z->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());
 
 CalculateImageDepth::CalculateImageDepth()
 {
@@ -148,12 +168,16 @@ void CalculateImageDepth::Update()
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
 		arrowMatrix1->Invert();
 		ARROW_FOR_DEBUG(arrowTransform1,arrowMatrix1,arrowSource1,arrowMapper1,arrowActor1,10,0.5,colors1,"Blue");
-		actor->render->AddActor(arrowActor1);
+		actor->render->AddActor(arrowActor1X);
+		actor->render->AddActor(arrowActor1Y);
+		actor->render->AddActor(arrowActor1Z);
 		vtkNew<vtkMatrix4x4> arrowMatrix2;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix2, externalMatrix_r, 4, 4);
 		arrowMatrix2->Invert();
 		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2, arrowMapper2, arrowActor2,10,0.5, colors2,"Cyan");
-		actor->render->AddActor(arrowActor2);
+		actor->render->AddActor(arrowActor2X);
+		actor->render->AddActor(arrowActor2Y);
+		actor->render->AddActor(arrowActor2Z);
 		cv::Mat rotation_translation_r1 = rotation_translation_r * rotation_translation_l.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r1);
 		cv::Mat translation(3, 1, CV_32FC1);
@@ -169,8 +193,10 @@ void CalculateImageDepth::Update()
 			}
 		}
 		vtkMatrix4x4::Multiply4x4(arrowMatrix3,arrowMatrix1, arrowMatrix3);
-		ARROW_FOR_DEBUG(arrowTransform3, arrowMatrix3, arrowSource3, arrowMapper3, arrowActor3,20,0.5, colors3,"Magenta");
-		actor->render->AddActor(arrowActor3);
+		ARROW_FOR_DEBUG(arrowTransform3, arrowMatrix3, arrowSource3, arrowMapper3, arrowActor3,5,0.5, colors3,"Magenta");
+		actor->render->AddActor(arrowActor3X);
+		actor->render->AddActor(arrowActor3Y);
+		actor->render->AddActor(arrowActor3Z);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
 		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
@@ -185,10 +211,14 @@ void CalculateImageDepth::Update()
 		R2_->SetElement(0, 3, rotation_translation_r.at<float>(0,3));
 		R2_->SetElement(1, 3, rotation_translation_r.at<float>(1,3));
 		R2_->SetElement(2, 3, rotation_translation_r.at<float>(2,3));
-		ARROW_FOR_DEBUG(arrowTransform4,R1_,arrowSource4,arrowMapper4,arrowActor4,20,1,colors4,"tomato");
-		actor->render->AddActor(arrowActor4);
-		ARROW_FOR_DEBUG(arrowTransform5,R2_,arrowSource5,arrowMapper5,arrowActor5,20,1,colors5,"navy");
-		actor->render->AddActor(arrowActor5);
+		ARROW_FOR_DEBUG(arrowTransform4,R1_,arrowSource4,arrowMapper4,arrowActor4,5,1,colors4,"tomato");
+		actor->render->AddActor(arrowActor4X);
+		actor->render->AddActor(arrowActor4Y);
+		actor->render->AddActor(arrowActor4Z);
+		ARROW_FOR_DEBUG(arrowTransform5,R2_,arrowSource5,arrowMapper5,arrowActor5,5,1,colors5,"navy");
+		actor->render->AddActor(arrowActor5X);
+		actor->render->AddActor(arrowActor5Y);
+		actor->render->AddActor(arrowActor5Z);
 		cv::Mat mapLeftx, mapLefty;
 		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
 		cv::Mat mapRightx, mapRighty;
