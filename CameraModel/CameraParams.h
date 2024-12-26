@@ -15,8 +15,10 @@ struct CameraParams
 	float CameraPos[3];
 	//the orientation that camera looked at (normalized vector)
 	float CameraOri[3];
-	//the clipping range that camera can capture the objec
+	//the clipping range that camera can capture the object
 	float ClippingRange[2];
+	//the offset between image center and the point that is optical point projected on image plane [pixel]
+	float OpticalOffset[2];
 };
 
 class __EXPORT_API__ CameraManager
@@ -36,7 +38,7 @@ public:
 	float* GetExternalMatrix();
 	CameraParams* mParams = nullptr;
 private:
-	float mInternalMatrix[9];
-	float mExternalMatrix[16];
+	float mInternalMatrix[9] = {0};
+	float mExternalMatrix[16] = {0};
 	bool mDebug = false;
 };

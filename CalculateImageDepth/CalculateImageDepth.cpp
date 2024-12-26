@@ -176,9 +176,9 @@ void CalculateImageDepth::Update()
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
 		arrowMatrix1->Invert();
 		ARROW_FOR_DEBUG(arrowTransform1,arrowMatrix1,arrowSource1X, arrowSource1Y, arrowSource1Z,arrowMapper1X, arrowMapper1Y, arrowMapper1Z,arrowActor1,10,0.5,colors1,"Blue");
-		//actor->render->AddActor(arrowActor1X);
-		//actor->render->AddActor(arrowActor1Y);
-		//actor->render->AddActor(arrowActor1Z);
+		actor->render->AddActor(arrowActor1X);
+		actor->render->AddActor(arrowActor1Y);
+		actor->render->AddActor(arrowActor1Z);
 		vtkNew<vtkMatrix4x4> arrowMatrix2;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix2, externalMatrix_r, 4, 4);
 		arrowMatrix2->Invert();

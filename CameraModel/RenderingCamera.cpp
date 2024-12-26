@@ -19,6 +19,7 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkImageLuminance.h>
+#include <vtkPanoramicProjectionPass.h>
 #include <vtkConeSource.h>
 #include <vtkCubeSource.h>
 #include <vtkAppendFilter.h>
