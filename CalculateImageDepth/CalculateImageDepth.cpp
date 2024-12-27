@@ -6,6 +6,7 @@
 #include <vtkSphereSource.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkNamedColors.h>
+#include <vtkAxesActor.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -34,48 +35,6 @@
 				a.at<float>(i, j) = b.at<float>(i, j);\
 			}\
 		}
-#define ARROW_FOR_DEBUG(transform,matrix,arrowSourceX,arrowSourceY,arrowSourceZ, mapperX,mapperY,mapperZ, arrowActor,scale,opacity,colors,colorName) vtkNew<vtkTransform> transform;\
-	vtkNew<vtkNamedColors> colors;			\
-	transform->SetMatrix(matrix);				\
-	vtkNew<vtkArrowSource> arrowSourceX;						\
-	vtkNew<vtkArrowSource> arrowSourceY;						\
-	vtkNew<vtkArrowSource> arrowSourceZ;						\
-	arrowSourceX->Update();									\
-	arrowSourceY->Update();									\
-	arrowSourceZ->Update();									\
-	vtkNew<vtkPolyDataMapper> mapperX;				\
-	vtkNew<vtkPolyDataMapper> mapperY;				\
-	vtkNew<vtkPolyDataMapper> mapperZ;				\
-	mapperX->SetInputConnection(arrowSourceX->GetOutputPort());\
-	mapperY->SetInputConnection(arrowSourceY->GetOutputPort());\
-	mapperZ->SetInputConnection(arrowSourceZ->GetOutputPort());\
-	vtkNew<vtkActor> arrowActor##X;	\
-	arrowActor##X->SetPosition(0,0,0);	\
-	arrowActor##X->SetOrientation(90,0,0);	\
-	arrowActor##X->AddPosition(transform->GetPosition());			\
-	arrowActor##X->AddOrientation(transform->GetOrientation());		\
-	arrowActor##X->SetMapper(mapperX);							\
-	arrowActor##X->SetScale(scale);							\
-	arrowActor##X->GetProperty()->SetOpacity(opacity);				\
-	arrowActor##X->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());\
-	vtkNew<vtkActor> arrowActor##Y;										\
-	arrowActor##Y->SetPosition(0,0,0);			\
-	arrowActor##Y->SetOrientation(0,90,0);		\
-	arrowActor##Y->AddPosition(transform->GetPosition());			\
-	arrowActor##Y->AddOrientation(transform->GetOrientation());		\
-	arrowActor##Y->SetMapper(mapperY);							\
-	arrowActor##Y->SetScale(scale);							\
-	arrowActor##Y->GetProperty()->SetOpacity(opacity);				\
-	arrowActor##Y->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());\
-	vtkNew<vtkActor> arrowActor##Z;										\
-	arrowActor##Z->SetPosition(0,0,0);			\
-	arrowActor##Z->SetOrientation(0,0,90);		\
-	arrowActor##Z->AddPosition(transform->GetPosition());			\
-	arrowActor##Z->AddOrientation(transform->GetOrientation());		\
-	arrowActor##Z->SetMapper(mapperZ);							\
-	arrowActor##Z->SetScale(scale);							\
-	arrowActor##Z->GetProperty()->SetOpacity(opacity);				\
-	arrowActor##Z->GetProperty()->SetColor(colors->GetColor3d(colorName).GetData());
 
 CalculateImageDepth::CalculateImageDepth()
 {
@@ -175,17 +134,15 @@ void CalculateImageDepth::Update()
 		vtkNew<vtkMatrix4x4> arrowMatrix1;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
 		arrowMatrix1->Invert();
-		ARROW_FOR_DEBUG(arrowTransform1,arrowMatrix1,arrowSource1X, arrowSource1Y, arrowSource1Z,arrowMapper1X, arrowMapper1Y, arrowMapper1Z,arrowActor1,10,0.5,colors1,"Blue");
-		actor->render->AddActor(arrowActor1X);
-		actor->render->AddActor(arrowActor1Y);
-		actor->render->AddActor(arrowActor1Z);
+		vtkNew<vtkAxesActor> axesActor1;
+		axesActor1->SetUserMatrix(arrowMatrix1);
+		axesActor1->SetTotalLength(10,10,10);
 		vtkNew<vtkMatrix4x4> arrowMatrix2;
 		ARRAY_TO_VTK4X4MATRIX(arrowMatrix2, externalMatrix_r, 4, 4);
 		arrowMatrix2->Invert();
-		ARROW_FOR_DEBUG(arrowTransform2, arrowMatrix2, arrowSource2X, arrowSource2Y, arrowSource2Z, arrowMapper2X,arrowMapper2Y,arrowMapper2Z, arrowActor2,10,0.5, colors2,"Cyan");
-		actor->render->AddActor(arrowActor2X);
-		actor->render->AddActor(arrowActor2Y);
-		actor->render->AddActor(arrowActor2Z);
+		vtkNew<vtkAxesActor> axesActor2;
+		axesActor2->SetUserMatrix(arrowMatrix2);
+		axesActor2->SetTotalLength(10, 10, 10);
 		cv::Mat rotation_translation_r1 = rotation_translation_r * rotation_translation_l.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r1);
 		cv::Mat translation(3, 1, CV_32FC1);
@@ -201,10 +158,9 @@ void CalculateImageDepth::Update()
 			}
 		}
 		vtkMatrix4x4::Multiply4x4(arrowMatrix3,arrowMatrix1, arrowMatrix3);
-		ARROW_FOR_DEBUG(arrowTransform3, arrowMatrix3, arrowSource3X,arrowSource3Y,arrowSource3Z, arrowMapper3X,arrowMapper3Y,arrowMapper3Z, arrowActor3,5,0.5, colors3,"Magenta");
-		actor->render->AddActor(arrowActor3X);
-		actor->render->AddActor(arrowActor3Y);
-		actor->render->AddActor(arrowActor3Z);
+		vtkNew<vtkAxesActor> axesActor3;
+		axesActor3->SetUserMatrix(arrowMatrix3);
+		axesActor3->SetTotalLength(10, 10, 10);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
 		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
@@ -219,14 +175,17 @@ void CalculateImageDepth::Update()
 		R2_->SetElement(0, 3, rotation_translation_r.at<float>(0,3));
 		R2_->SetElement(1, 3, rotation_translation_r.at<float>(1,3));
 		R2_->SetElement(2, 3, rotation_translation_r.at<float>(2,3));
-		ARROW_FOR_DEBUG(arrowTransform4,R1_,arrowSource4X,arrowSource4Y,arrowSource4Z,arrowMapper4X,arrowMapper4Y,arrowMapper4Z,arrowActor4,5,1,colors4,"tomato");
-		actor->render->AddActor(arrowActor4X);
-		actor->render->AddActor(arrowActor4Y);
-		actor->render->AddActor(arrowActor4Z);
-		ARROW_FOR_DEBUG(arrowTransform5,R2_,arrowSource5X,arrowSource5Y,arrowSource5Z,arrowMapper5X,arrowMapper5Y,arrowMapper5Z,arrowActor5,5,1,colors5,"navy");
-		actor->render->AddActor(arrowActor5X);
-		actor->render->AddActor(arrowActor5Y);
-		actor->render->AddActor(arrowActor5Z);
+		vtkNew<vtkAxesActor> axesActor4;
+		axesActor4->SetUserMatrix(R1_);
+		axesActor4->SetTotalLength(10, 10, 10);
+		vtkNew<vtkAxesActor> axesActor5;
+		axesActor5->SetTotalLength(10, 10, 10);
+		axesActor5->SetUserMatrix(R2_);
+		actor->render->AddActor(axesActor1);
+		actor->render->AddActor(axesActor2);
+		actor->render->AddActor(axesActor3);
+		actor->render->AddActor(axesActor4);
+		actor->render->AddActor(axesActor5);
 		cv::Mat mapLeftx, mapLefty;
 		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
 		cv::Mat mapRightx, mapRighty;
