@@ -26,6 +26,7 @@
 #include <vtkDataSetMapper.h>
 #include <vtkLODActor.h>
 #include <vtkLight.h>
+#include <vtkLightActor.h>
 #include <vtkPlaneSource.h>
 #include <vtkTexture.h>
 #include <vtkTextureMapToPlane.h>
@@ -92,7 +93,7 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 	luminance##CameraID->SetInputData(windowImage##CameraID->GetOutput());			\
 	luminance##CameraID->Update();
 
-struct ModelObject
+struct ObjectModel
 {
 	vtkNew<vtkOBJReader> reader;
 	vtkNew<vtkPolyDataMapper> mapper;
@@ -106,12 +107,18 @@ struct CameraImage
 	vtkNew<vtkDataSetMapper> cameraMapper;
 	vtkNew<vtkLODActor> cameraActor;
 };
+struct LightModel
+{
+	vtkNew<vtkLight> light;
+	vtkNew<vtkLightActor> lightActor;
+};
 class StereoVisionImpl 
 {
 public:
 	StereoVisionImpl() {}
 	~StereoVisionImpl() {}
-	ModelObject mObject;
+	ObjectModel mObject;
+	LightModel mLight;
 	ReconActor mReconActor;
 	CameraImage mLeft;
 	CameraImage mRight;
@@ -189,6 +196,15 @@ void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, Camera
 void StereoVision::Update()
 {
 	vtkNew<vtkNamedColors> colors;
+	mPimpl->mLight.light->SetLightTypeToSceneLight();
+	mPimpl->mLight.light->SetPosition(0,0,20);
+	mPimpl->mLight.light->SetPositional(true);
+	mPimpl->mLight.light->SetConeAngle(50);
+	mPimpl->mLight.light->SetFocalPoint(10,10,-100);
+	mPimpl->mLight.light->SetDiffuseColor(colors->GetColor3d("Red").GetData());
+	mPimpl->mLight.light->SetAmbientColor(colors->GetColor3d("Green").GetData());
+	mPimpl->mLight.light->SetSpecularColor(colors->GetColor3d("Blue").GetData());
+	mPimpl->mLight.lightActor->SetLight(mPimpl->mLight.light);
 	vtkNew<vtkCamera> cameraLeft;
 	//Set Left camera parameters
 	float* externalMatrix_l = mLeft->GetExternalMatrix();
@@ -254,6 +270,7 @@ void StereoVision::Update()
 	renderer->AddActor(mPimpl->mRight.cameraActor);
 
 	renderer->AddActor(mPimpl->mObject.actor);
+	renderer->AddViewProp(mPimpl->mLight.lightActor);
 	renderer->ResetCamera();
 	renderer->SetBackground(colors->GetColor3d("SlateGray").GetData());
 	mPimpl->mReconActor.render = renderer;
