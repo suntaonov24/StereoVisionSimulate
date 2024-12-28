@@ -225,6 +225,7 @@ void StereoVision::Update()
 	renWinLeft->AddRenderer(renderLeft);
 	renderLeft->SetActiveCamera(cameraLeft);
 	renderLeft->AddActor(mPimpl->mObject.actor);
+	renderLeft->AddViewProp(mPimpl->mLight.lightActor);
 
 	vtkNew<vtkCamera> cameraRight;
 	//Set Right camera parameters
@@ -246,6 +247,7 @@ void StereoVision::Update()
 	renWinRight->AddRenderer(renderRight);
 	renderRight->SetActiveCamera(cameraRight);
 	renderRight->AddActor(mPimpl->mObject.actor);
+	renderRight->AddViewProp(mPimpl->mLight.lightActor);
 	//Renderer world coordinate
 	vtkNew<vtkMatrix4x4> worldMatrix;
 	worldMatrix->Identity();
