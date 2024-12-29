@@ -40,7 +40,11 @@ void CameraManager::SetBoardSize(float x, float y)
 	mParams->ImageBoardSize[0] = x;
 	mParams->ImageBoardSize[1] = y;
 }
-
+void CameraManager::SetOpticalPtsOffset(float offsetX, float offsetY)
+{
+	mParams->OpticalOffset[0] = offsetX;
+	mParams->OpticalOffset[1] = offsetY;
+}
 void CameraManager::SetFocalLength(float focalLength)
 {
 	mParams->FocalLength = focalLength;
@@ -60,8 +64,8 @@ void CameraManager::Update()
 	float spacingY = mParams->ImageBoardSize[1] / mParams->ImageSize[1];
 	//Calculate camera internal matrix
 	Eigen::Matrix3f internalMatrix;
-	internalMatrix << mParams->FocalLength / spacingX, 0.0, mParams->ImageSize[0] * 0.5,
-		0.0, mParams->FocalLength / spacingY, mParams->ImageSize[1] * 0.5,
+	internalMatrix << mParams->FocalLength / spacingX, 0.0, mParams->ImageSize[0] * 0.5+mParams->OpticalOffset[0],
+		0.0, mParams->FocalLength / spacingY, mParams->ImageSize[1] * 0.5+mParams->OpticalOffset[1],
 		0.0, 0.0, 1.0;
 	if (mDebug)
 	{

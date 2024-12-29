@@ -12,6 +12,7 @@ public:
 	void SetCameraPos(float pos_l[3], float pos_r[3]);
 	void SetBoardSize(float board_l[2], float board_r[2]);
 	void SetCameraOrientation(float ori_l[3],float ori_r[3]);
+	void SetOpticalPtsOffset(float* offset_l, float* offset_r);
 	void SetFocalLength(float length_l,float length_r);
 	void SetImageSize(unsigned int sz_l[2], unsigned int sz_r[2]);
 	void SetClippingRange(float range_l[2],float range_r[2]);

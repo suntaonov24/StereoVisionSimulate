@@ -15,6 +15,9 @@ int main(int argc, char** argv)
 	float cameraLeftOri[] = { 0,-0.1,PI / 180 * 90 };
 	float cameraRightOri[] = {0,0.1,PI / 180 * 90 };
 	calculator.SetCameraOrientation(cameraLeftOri,cameraRightOri);
+	float cameraLeftOffset[] = {50,15};
+	float cameraRightOffset[] = {50,15};
+	calculator.SetOpticalPtsOffset(cameraLeftOffset,cameraRightOffset);
 	calculator.SetFocalLength(10,10);
 	unsigned int imageLeftSize[] = {512,512 };
 	unsigned int imageRightSize[] = { 512,512 };

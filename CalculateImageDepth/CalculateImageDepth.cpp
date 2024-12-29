@@ -80,6 +80,11 @@ void CalculateImageDepth::SetCameraOrientation(float ori_l[3], float ori_r[3])
 	mLeft->SetCameraOrientation(ori_l[0], ori_l[1], ori_l[2]);
 	mRight->SetCameraOrientation(ori_r[0], ori_r[1], ori_r[2]);
 }
+void CalculateImageDepth::SetOpticalPtsOffset(float* offset_l, float* offset_r)
+{
+	mLeft->SetOpticalPtsOffset(offset_r[0],offset_r[1]);
+	mRight->SetOpticalPtsOffset(offset_l[0],offset_r[1]);
+}
 void CalculateImageDepth::SetFocalLength(float length_l, float length_r)
 {
 	mLeft->SetFocalLength(length_l);

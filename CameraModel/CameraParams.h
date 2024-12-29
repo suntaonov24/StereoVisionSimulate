@@ -32,6 +32,7 @@ public:
 	void SetBoardSize(float x, float y);
 	void SetImageSize(unsigned int x, unsigned int y);
 	void SetFocalLength(float focalLength);
+	void SetOpticalPtsOffset(float offsetX, float offsetY);
 	void SetClippingRange(float near, float far);
 	void Update();
 	float* GetInternalMatrix();
