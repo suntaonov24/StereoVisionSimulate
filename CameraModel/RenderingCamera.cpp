@@ -88,10 +88,7 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 	windowImage##CameraID->SetScale(1);									\
 	windowImage##CameraID->SetInputBufferTypeToRGB();							\
 	windowImage##CameraID->ReadFrontBufferOff();							\
-	windowImage##CameraID->Update();										\
-	vtkNew<vtkImageLuminance> luminance##CameraID;							\
-	luminance##CameraID->SetInputData(windowImage##CameraID->GetOutput());			\
-	luminance##CameraID->Update();
+	windowImage##CameraID->Update();
 
 struct ObjectModel
 {
@@ -293,7 +290,8 @@ void StereoVision::Update()
 
 	if (mFunc != nullptr)
 	{
-		mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);
+		//mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);
+		mFunc((unsigned char*)windowImageLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)windowImageRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);
 	}
 	iren->Start();
 }

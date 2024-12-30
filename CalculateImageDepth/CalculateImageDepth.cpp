@@ -108,8 +108,12 @@ void CalculateImageDepth::Update()
 	mStereoVision->SetLeftCamera(mLeft);
 	mStereoVision->SetRightCamera(mRight);
 	auto function = [](unsigned char* left, CameraManager* leftManager,unsigned char* right, CameraManager* rightManager,ReconActor* actor,bool debug)->void {
-		cv::Mat leftImage(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1], CV_8UC1,left);
-		cv::Mat rightImage(rightManager->mParams->ImageSize[0], rightManager->mParams->ImageSize[1], CV_8UC1,right);
+		cv::Mat leftImage_rgb(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1], CV_8UC3,left);
+		cv::Mat rightImage_rgb(rightManager->mParams->ImageSize[0], rightManager->mParams->ImageSize[1], CV_8UC3,right);
+		cv::Mat leftImage;
+		cv::Mat rightImage;
+		cv::cvtColor(leftImage_rgb,leftImage,cv::COLOR_RGB2GRAY);
+		cv::cvtColor(rightImage_rgb,rightImage,cv::COLOR_RGB2GRAY);
 		cv::Mat leftImageFliped, rightImageFliped;
 		cv::flip(leftImage,leftImageFliped,0);
 		cv::flip(rightImage, rightImageFliped,0);
