@@ -155,9 +155,9 @@ void CalculateImageDepth::Update()
 		cv::Mat rotation_translation_r1 = rotation_translation_r * rotation_translation_l.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r1);
 		cv::Mat translation(3, 1, CV_32FC1);
-		translation.at<float>(0) = rotation_translation_r1.at<float>(0,3);
-		translation.at<float>(1) = rotation_translation_r1.at<float>(1,3);
-		translation.at<float>(2) = rotation_translation_r1.at<float>(2,3);
+		translation.at<float>(0) = rotation_translation_r.at<float>(0,3)-rotation_translation_l.at<float>(0,3);
+		translation.at<float>(1) = rotation_translation_r.at<float>(1,3)-rotation_translation_l.at<float>(0,3);
+		translation.at<float>(2) = rotation_translation_r.at<float>(2,3)-rotation_translation_l.at<float>(0,3);
 		vtkNew<vtkMatrix4x4> arrowMatrix3;
 		for (unsigned int i = 0; i < 4; ++i)
 		{
