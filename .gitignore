@@ -18,6 +18,8 @@ CalculateImageDepth/dllmain.cpp
 CalculateImageDepth/framework.h
 CalculateImageDepth/pch.cpp
 CalculateImageDepth/pch.h
+CalculateImageDepth/calibration_base.cpp
+CalculateImageDepth/stereo_geom.cpp
 
 CameraModelTest/x64
 CameraModelTest/CameraModelTest.vcxproj
