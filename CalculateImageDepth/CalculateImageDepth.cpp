@@ -140,61 +140,15 @@ void CalculateImageDepth::Update()
 		//Transformation matrix from camera coordinate to world coordinate (inverse of external matrix)
 		rotation_translation_l = rotation_translation_l.inv();
 		rotation_translation_r = rotation_translation_r.inv();
-		vtkNew<vtkMatrix4x4> arrowMatrix1;
-		ARRAY_TO_VTK4X4MATRIX(arrowMatrix1, externalMatrix_l, 4, 4);
-		arrowMatrix1->Invert();
-		vtkNew<vtkAxesActor> axesActor1;
-		axesActor1->SetUserMatrix(arrowMatrix1);
-		axesActor1->SetTotalLength(20,20,20);
-		vtkNew<vtkMatrix4x4> arrowMatrix2;
-		ARRAY_TO_VTK4X4MATRIX(arrowMatrix2, externalMatrix_r, 4, 4);
-		arrowMatrix2->Invert();
-		vtkNew<vtkAxesActor> axesActor2;
-		axesActor2->SetUserMatrix(arrowMatrix2);
-		axesActor2->SetTotalLength(20, 20, 20);
 		cv::Mat rotation_translation_r1 = rotation_translation_r * rotation_translation_l.inv();
 		GetRotationMatrix(rotation_r, rotation_translation_r1);
 		cv::Mat translation(3, 1, CV_32FC1);
 		translation.at<float>(0) = rotation_translation_r.at<float>(0,3)-rotation_translation_l.at<float>(0,3);
 		translation.at<float>(1) = rotation_translation_r.at<float>(1,3)-rotation_translation_l.at<float>(1,3);
 		translation.at<float>(2) = rotation_translation_r.at<float>(2,3)-rotation_translation_l.at<float>(2,3);
-		vtkNew<vtkMatrix4x4> arrowMatrix3;
-		for (unsigned int i = 0; i < 4; ++i)
-		{
-			for (unsigned int j = 0; j < 4; ++j)
-			{
-				arrowMatrix3->SetElement(i, j, rotation_translation_r1.at<float>(i, j));
-			}
-		}
-		vtkMatrix4x4::Multiply4x4(arrowMatrix3,arrowMatrix1, arrowMatrix3);
-		vtkNew<vtkAxesActor> axesActor3;
-		axesActor3->SetUserMatrix(arrowMatrix3);
-		axesActor3->SetTotalLength(50, 50, 50);
 		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
 		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
-		vtkNew<vtkMatrix4x4> R1_,R2_;
-		R1_->Identity();
-		R2_->Identity();
-		MAT_TO_VTKMATRIX(R1_, R1, 3, 3);
-		MAT_TO_VTKMATRIX(R2_, R2, 3, 3);
-		R1_->SetElement(0, 3, rotation_translation_l.at<float>(0,3));
-		R1_->SetElement(1, 3, rotation_translation_l.at<float>(1,3));
-		R1_->SetElement(2, 3, rotation_translation_l.at<float>(2,3));
-		R2_->SetElement(0, 3, rotation_translation_r.at<float>(0,3));
-		R2_->SetElement(1, 3, rotation_translation_r.at<float>(1,3));
-		R2_->SetElement(2, 3, rotation_translation_r.at<float>(2,3));
-		vtkNew<vtkAxesActor> axesActor4;
-		axesActor4->SetUserMatrix(R1_);
-		axesActor4->SetTotalLength(10, 10, 10);
-		vtkNew<vtkAxesActor> axesActor5;
-		axesActor5->SetTotalLength(10, 10, 10);
-		axesActor5->SetUserMatrix(R2_);
-		actor->render->AddActor(axesActor1);
-		actor->render->AddActor(axesActor2);
-		actor->render->AddActor(axesActor3);
-		actor->render->AddActor(axesActor4);
-		actor->render->AddActor(axesActor5);
 		cv::Mat mapLeftx, mapLefty;
 		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
 		cv::Mat mapRightx, mapRighty;

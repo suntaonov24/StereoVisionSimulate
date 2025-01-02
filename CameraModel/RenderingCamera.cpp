@@ -133,7 +133,7 @@ public:
 		camera->cameraMapper->SetInputConnection(camera->cameraAppend->GetOutputPort());
 		camera->cameraActor->SetMapper(camera->cameraMapper);
 		camera->cameraActor->SetScale(scale, scale, scale);
-		camera->cameraActor->SetOrientation(0,0,90);
+		camera->cameraActor->SetOrientation(0,90,0);
 		camera->cameraActor->AddPosition(transform->GetPosition());
 		camera->cameraActor->AddOrientation(transform->GetOrientation());
 	}
