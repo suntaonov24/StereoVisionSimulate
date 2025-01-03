@@ -83,7 +83,7 @@ VTK_MODULE_INIT(vtkRenderingFreeType);
 	texturedPlane##CameraID->AddPosition(camera##CameraID##Transform->GetPosition());		\
 	texturedPlane##CameraID->AddOrientation(camera##CameraID##Transform->GetOrientation());
 
-#define GetImageFromRenderWindow(CameraID) vtkNew<vtkWindowToImageFilter> windowImage##CameraID; \
+#define GET_RENDER_WINDOW_IMAGE(CameraID) vtkNew<vtkWindowToImageFilter> windowImage##CameraID; \
 	windowImage##CameraID->SetInput(renWin##CameraID);						\
 	windowImage##CameraID->SetScale(1);									\
 	windowImage##CameraID->SetInputBufferTypeToRGB();							\
@@ -98,6 +98,7 @@ struct ObjectModel
 };
 struct CameraImage
 {
+	vtkNew<vtkNamedColors> colors;
 	vtkNew<vtkConeSource> cameraCone;
 	vtkNew<vtkCubeSource> cameraCube;
 	vtkNew<vtkAppendFilter> cameraAppend;
@@ -136,6 +137,7 @@ public:
 		camera->cameraActor->SetOrientation(0,90,0);
 		camera->cameraActor->AddPosition(transform->GetPosition());
 		camera->cameraActor->AddOrientation(transform->GetOrientation());
+		camera->cameraActor->GetProperty()->SetColor(camera->colors->GetColor3d("LightSalmon").GetData());
 	}
 	void ConfigureCameraParams(vtkCamera* camera, float* internalMatrix, float focalLength, unsigned int* imageSize, float* clippingRange)
 	{
@@ -277,20 +279,19 @@ void StereoVision::Update()
 	mPimpl->mReconActor.renWin = renderWindow;
 	renWinLeft->Render();
 	renWinRight->Render();
-	//Get renderer window image
-	GetImageFromRenderWindow(Left);
+	//Get left renderer window image
+	GET_RENDER_WINDOW_IMAGE(Left);
 	//Get virtual image plane of left camera
 	RENDER_TEXTURE_PLANE(Left);
 	renderer->AddActor(texturedPlaneLeft);
-
-	GetImageFromRenderWindow(Right);
+	//Get right renderer window image
+	GET_RENDER_WINDOW_IMAGE(Right);
 	//Get virtual image plane of right camera
 	RENDER_TEXTURE_PLANE(Right);
 	renderer->AddActor(texturedPlaneRight);
 
 	if (mFunc != nullptr)
 	{
-		//mFunc((unsigned char*)luminanceLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)luminanceRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);
 		mFunc((unsigned char*)windowImageLeft->GetOutput()->GetScalarPointer(),mLeft,(unsigned char*)windowImageRight->GetOutput()->GetScalarPointer(),mRight,&mPimpl->mReconActor,mPimpl->mDebug);
 	}
 	iren->Start();
