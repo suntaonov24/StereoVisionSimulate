@@ -171,8 +171,8 @@ void CalculateImageDepth::Update()
 		disparity = disparity / 16.0;
 		if (debug)
 		{
-			cv::namedWindow("disparity", cv::WINDOW_FREERATIO);
-			cv::imshow("disparity", disparity*128);
+			cv::namedWindow("disparity image", cv::WINDOW_FREERATIO);
+			cv::imshow("disparity image", disparity*128);
 			cv::waitKey(0);
 		}
 		cv::Mat reconImage;
