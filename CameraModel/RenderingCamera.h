@@ -44,11 +44,10 @@ public:
 	void SetLeftCamera(CameraManager* camera);
 	void SetRightCamera(CameraManager* camera);
 	//Registrate call back function for calculating disparity map
-	void RegisterCallback(void(*func)(unsigned char* imageLeft, CameraManager* left,unsigned char* imageRight, CameraManager* right,ReconActor* actor,bool debug));
+	void RegisterCallback(void(*func)(unsigned char* imageLeft,unsigned char* imageRight, std::vector<CameraManager*>* right,ReconActor* actor,bool debug));
 	void Update();
-	CameraManager* mLeft = nullptr;
-	CameraManager* mRight = nullptr;
+	std::vector<CameraManager*> mCameraArray;
 private:
 	StereoVisionImpl* mPimpl = nullptr;
-	void (*mFunc)(unsigned char* imageLeft, CameraManager* left, unsigned char* imageRight, CameraManager* right,ReconActor* actor, bool debug) = nullptr;
+	void (*mFunc)(unsigned char* imageLeft, unsigned char* imageRight, std::vector<CameraManager*>* cameraArray,ReconActor* actor, bool debug) = nullptr;
 };

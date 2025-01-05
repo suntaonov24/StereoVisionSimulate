@@ -107,9 +107,9 @@ void CalculateImageDepth::Update()
 	mStereoVision->IsDebug(mDebug);
 	mStereoVision->SetLeftCamera(mLeft);
 	mStereoVision->SetRightCamera(mRight);
-	auto function = [](unsigned char* left, CameraManager* leftManager,unsigned char* right, CameraManager* rightManager,ReconActor* actor,bool debug)->void {
-		cv::Mat leftImage_rgb(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1], CV_8UC3,left);
-		cv::Mat rightImage_rgb(rightManager->mParams->ImageSize[0], rightManager->mParams->ImageSize[1], CV_8UC3,right);
+	auto function = [](unsigned char* left, unsigned char* right, std::vector<CameraManager*>* cameraManager,ReconActor* actor,bool debug)->void {
+		cv::Mat leftImage_rgb((*cameraManager)[0]->mParams->ImageSize[0], (*cameraManager)[0]->mParams->ImageSize[1], CV_8UC3, left);
+		cv::Mat rightImage_rgb((*cameraManager)[1]->mParams->ImageSize[0], (*cameraManager)[1]->mParams->ImageSize[1], CV_8UC3,right);
 		cv::Mat leftImage;
 		cv::Mat rightImage;
 		cv::cvtColor(leftImage_rgb,leftImage,cv::COLOR_RGB2GRAY);
@@ -124,10 +124,10 @@ void CalculateImageDepth::Update()
 			cv::namedWindow("right", cv::WINDOW_FREERATIO);
 			cv::imshow("right", rightImageFliped);
 		}
-		float* internalMatrix_l = leftManager->GetInternalMatrix();
-		float* externalMatrix_l = leftManager->GetExternalMatrix();
-		float* internalMatrix_r = rightManager->GetInternalMatrix();
-		float* externalMatrix_r = rightManager->GetExternalMatrix();
+		float* internalMatrix_l = (*cameraManager)[0]->GetInternalMatrix();
+		float* externalMatrix_l = (*cameraManager)[0]->GetExternalMatrix();
+		float* internalMatrix_r = (*cameraManager)[1]->GetInternalMatrix();
+		float* externalMatrix_r = (*cameraManager)[1]->GetExternalMatrix();
 		cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
 		cv::Mat internalMatrix_r_(3, 3, CV_32FC1, internalMatrix_r);
 		cv::Mat distCoeffs_l, distCoeffs_r;
@@ -146,7 +146,7 @@ void CalculateImageDepth::Update()
 		translation.at<float>(0) = rotation_translation_r.at<float>(0,3)-rotation_translation_l.at<float>(0,3);
 		translation.at<float>(1) = rotation_translation_r.at<float>(1,3)-rotation_translation_l.at<float>(1,3);
 		translation.at<float>(2) = rotation_translation_r.at<float>(2,3)-rotation_translation_l.at<float>(2,3);
-		cv::Size imageSize(leftManager->mParams->ImageSize[0], leftManager->mParams->ImageSize[1]);
+		cv::Size imageSize((*cameraManager)[0]->mParams->ImageSize[0], (*cameraManager)[0]->mParams->ImageSize[1]);
 		cv::Mat R1, R2, P1, P2, Q;
 		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
 		cv::Mat mapLeftx, mapLefty;
