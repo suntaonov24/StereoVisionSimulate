@@ -49,5 +49,5 @@ public:
 	std::vector<CameraManager*> mCameraArray;
 private:
 	StereoVisionImpl* mPimpl = nullptr;
-	void (*mFunc)(unsigned char* imageLeft, unsigned char* imageRight, std::vector<CameraManager*>* cameraArray, unsigned int* cameraIdx, ReconActor* actor, bool debug) = nullptr;
+	void (*mCallbackFunc)(unsigned char* imageLeft, unsigned char* imageRight, std::vector<CameraManager*>* cameraArray, unsigned int* cameraIdx, ReconActor* actor, bool debug) = nullptr;
 };

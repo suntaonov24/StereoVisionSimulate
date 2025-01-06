@@ -189,7 +189,7 @@ void StereoVision::SetRightCamera(CameraManager* camera)
 }
 void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, unsigned char* imageRight, std::vector<CameraManager*>* cameraArray, unsigned int* cameraIdx, ReconActor* actor,bool debug))
 {
-	mFunc = func;
+	mCallbackFunc = func;
 }
 void StereoVision::Update()
 {
@@ -272,9 +272,9 @@ void StereoVision::Update()
 	RENDER_TEXTURE_PLANE(Right,1);
 	renderer->AddActor(texturedPlaneRight);
 	unsigned int cameraIdx[] = {mPimpl->mLeftIdx,mPimpl->mRightIdx};
-	if (mFunc != nullptr)
+	if (mCallbackFunc != nullptr)
 	{
-		mFunc((unsigned char*)windowImageLeft->GetOutput()->GetScalarPointer(),(unsigned char*)windowImageRight->GetOutput()->GetScalarPointer(),&mCameraArray,cameraIdx,&mPimpl->mReconActor,mPimpl->mDebug);
+		mCallbackFunc((unsigned char*)windowImageLeft->GetOutput()->GetScalarPointer(),(unsigned char*)windowImageRight->GetOutput()->GetScalarPointer(),&mCameraArray,cameraIdx,&mPimpl->mReconActor,mPimpl->mDebug);
 	}
 	iren->Start();
 }
