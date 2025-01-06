@@ -64,8 +64,8 @@ void CameraManager::Update()
 	float spacingY = mParams->ImageBoardSize[1] / mParams->ImageSize[1];
 	//Calculate camera internal matrix
 	Eigen::Matrix3f internalMatrix;
-	internalMatrix << mParams->FocalLength / spacingX, 0.0, mParams->ImageSize[0] * 0.5+mParams->OpticalOffset[0],
-		0.0, mParams->FocalLength / spacingY, mParams->ImageSize[1] * 0.5+mParams->OpticalOffset[1],
+	internalMatrix << mParams->FocalLength / spacingX, 0.0, mParams->ImageSize[0] * 0.5,
+		0.0, mParams->FocalLength / spacingY, mParams->ImageSize[1] * 0.5,
 		0.0, 0.0, 1.0;
 	if (mDebug)
 	{
@@ -93,7 +93,6 @@ float* CameraManager::GetInternalMatrix()
 {
 	return mInternalMatrix;
 }
-
 float* CameraManager::GetExternalMatrix()
 {
 	return mExternalMatrix;

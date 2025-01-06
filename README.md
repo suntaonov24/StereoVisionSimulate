@@ -1,5 +1,8 @@
 # StereoVision Simulation Code
 
+	This code here mainly simulates the binocular vision system, calculates the depth information from images captured by left and right cameras, here we simulates and renders the scene of a street, take pictures from our cameras,
+	and we also calculates the depth information from left and right cameras' images, then overlay the street with points cloud calculated by depth information.
+
 ## 1. Generate camera instances.
    The main camera parameters are focal length, optical point projected at the center of image plane, those parameters can be descriped 
    by internal matrix, and where the camera located in real world space, such as where the camera facing at, those features can be represented 

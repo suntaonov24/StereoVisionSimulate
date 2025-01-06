@@ -115,6 +115,8 @@ public:
 	ReconActor mReconActor;
 	CameraImage mLeft;
 	CameraImage mRight;
+	unsigned int mLeftIdx;
+	unsigned int mRightIdx;
 	bool mDebug = false;
 	void RenderCamera(vtkTransform* transform,float scale, CameraImage* camera)
 	{
@@ -177,13 +179,15 @@ void StereoVision::SetLeftCamera(CameraManager* camera)
 {
 	mCameraArray.push_back(camera);
 	mCameraArray.back()->IsDebug(mPimpl->mDebug);
+	mPimpl->mLeftIdx = mCameraArray.size() - 1;
 }
 void StereoVision::SetRightCamera(CameraManager* camera)
 {
 	mCameraArray.push_back(camera);
 	mCameraArray.back()->IsDebug(mPimpl->mDebug);
+	mPimpl->mRightIdx = mCameraArray.size() - 1;
 }
-void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, unsigned char* imageRight, std::vector<CameraManager*>* cameraArray, ReconActor* actor,bool debug))
+void StereoVision::RegisterCallback(void(*func)(unsigned char* imageLeft, unsigned char* imageRight, std::vector<CameraManager*>* cameraArray, unsigned int* cameraIdx, ReconActor* actor,bool debug))
 {
 	mFunc = func;
 }
@@ -192,8 +196,8 @@ void StereoVision::Update()
 	vtkNew<vtkNamedColors> colors;
 	vtkNew<vtkCamera> cameraLeft;
 	//Set Left camera parameters
-	float* externalMatrix_l = mCameraArray[0]->GetExternalMatrix();
-	mPimpl->ConfigureCameraParams(cameraLeft, mCameraArray[0]->GetInternalMatrix(), mCameraArray[0]->mParams->FocalLength, mCameraArray[0]->mParams->ImageSize, mCameraArray[0]->mParams->ClippingRange);
+	float* externalMatrix_l = mCameraArray[mPimpl->mLeftIdx]->GetExternalMatrix();
+	mPimpl->ConfigureCameraParams(cameraLeft, mCameraArray[mPimpl->mLeftIdx]->GetInternalMatrix(), mCameraArray[mPimpl->mLeftIdx]->mParams->FocalLength, mCameraArray[mPimpl->mLeftIdx]->mParams->ImageSize, mCameraArray[mPimpl->mLeftIdx]->mParams->ClippingRange);
 	vtkNew<vtkMatrix4x4> cameraLeftMatrix;
 	ARRAY_TO_VTK4X4MATRIX(cameraLeftMatrix, externalMatrix_l,4,4);
 	cameraLeftMatrix->Invert();
@@ -205,7 +209,7 @@ void StereoVision::Update()
 
 	vtkNew<vtkRenderWindow> renWinLeft;
 	renWinLeft->SetWindowName("Left side camera image");
-	renWinLeft->SetSize(mCameraArray[0]->mParams->ImageSize[0], mCameraArray[0]->mParams->ImageSize[1]);
+	renWinLeft->SetSize(mCameraArray[mPimpl->mLeftIdx]->mParams->ImageSize[0], mCameraArray[mPimpl->mLeftIdx]->mParams->ImageSize[1]);
 	vtkNew<vtkRenderer> renderLeft;
 	renWinLeft->AddRenderer(renderLeft);
 	renderLeft->SetActiveCamera(cameraLeft);
@@ -213,8 +217,8 @@ void StereoVision::Update()
 
 	vtkNew<vtkCamera> cameraRight;
 	//Set Right camera parameters
-	float* externalMatrix_r = mCameraArray[1]->GetExternalMatrix();
-	mPimpl->ConfigureCameraParams(cameraRight, mCameraArray[1]->GetInternalMatrix(), mCameraArray[1]->mParams->FocalLength, mCameraArray[1]->mParams->ImageSize, mCameraArray[1]->mParams->ClippingRange);
+	float* externalMatrix_r = mCameraArray[mPimpl->mRightIdx]->GetExternalMatrix();
+	mPimpl->ConfigureCameraParams(cameraRight, mCameraArray[mPimpl->mRightIdx]->GetInternalMatrix(), mCameraArray[mPimpl->mRightIdx]->mParams->FocalLength, mCameraArray[mPimpl->mRightIdx]->mParams->ImageSize, mCameraArray[mPimpl->mRightIdx]->mParams->ClippingRange);
 	vtkNew<vtkMatrix4x4> cameraRightMatrix;
 	ARRAY_TO_VTK4X4MATRIX(cameraRightMatrix, externalMatrix_r,4,4);
 	cameraRightMatrix->Invert();
@@ -226,7 +230,7 @@ void StereoVision::Update()
 	RENDER_CAMERA_FRUSTUM(Right);
 	vtkNew<vtkRenderWindow> renWinRight;
 	renWinRight->SetWindowName("Right side camera image");
-	renWinRight->SetSize(mCameraArray[1]->mParams->ImageSize[0], mCameraArray[1]->mParams->ImageSize[1]);
+	renWinRight->SetSize(mCameraArray[mPimpl->mRightIdx]->mParams->ImageSize[0], mCameraArray[mPimpl->mRightIdx]->mParams->ImageSize[1]);
 	vtkNew<vtkRenderer> renderRight;
 	renWinRight->AddRenderer(renderRight);
 	renderRight->SetActiveCamera(cameraRight);
@@ -267,10 +271,10 @@ void StereoVision::Update()
 	//Get virtual image plane of right camera
 	RENDER_TEXTURE_PLANE(Right,1);
 	renderer->AddActor(texturedPlaneRight);
-
+	unsigned int cameraIdx[] = {mPimpl->mLeftIdx,mPimpl->mRightIdx};
 	if (mFunc != nullptr)
 	{
-		mFunc((unsigned char*)windowImageLeft->GetOutput()->GetScalarPointer(),(unsigned char*)windowImageRight->GetOutput()->GetScalarPointer(),&mCameraArray,&mPimpl->mReconActor,mPimpl->mDebug);
+		mFunc((unsigned char*)windowImageLeft->GetOutput()->GetScalarPointer(),(unsigned char*)windowImageRight->GetOutput()->GetScalarPointer(),&mCameraArray,cameraIdx,&mPimpl->mReconActor,mPimpl->mDebug);
 	}
 	iren->Start();
 }
