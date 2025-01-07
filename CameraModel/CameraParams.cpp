@@ -1,6 +1,9 @@
 #include "CameraParams.h"
 #include <Eigen/Eigen>
 
+#define EIGEN_TO_MAT(src,dst,temp,sz)temp = src.transpose();\
+memcpy(dst, temp.data(), sz * sizeof(float));
+
 CameraManager::CameraManager()
 {
 	mParams = new CameraParams;
@@ -72,8 +75,8 @@ void CameraManager::Update()
 		std::cout << "Internal matrix: " << std::endl;
 		std::cout << internalMatrix << std::endl;
 	}
-	Eigen::Matrix3f internalMatrix_ = internalMatrix.transpose();
-	memcpy(mInternalMatrix, internalMatrix_.data(), 9 * sizeof(float));
+	Eigen::Matrix3f internalMatrix_;
+	EIGEN_TO_MAT(internalMatrix,mInternalMatrix,internalMatrix_,9);
 	//Calculate camera external matrix
 	Eigen::Matrix4f externalMatrix;
 	externalMatrix << rotationMatrix(0,0), rotationMatrix(0,1), rotationMatrix(0,2), mParams->CameraPos[0],
@@ -86,8 +89,8 @@ void CameraManager::Update()
 		std::cout << "External matrix: " << std::endl;
 		std::cout << externalMatrix << std::endl;
 	}
-	Eigen::Matrix4f externalMatrix_ = externalMatrix.transpose();
-	memcpy(mExternalMatrix, externalMatrix_.data(), 16 * sizeof(float));
+	Eigen::Matrix4f externalMatrix_;
+	EIGEN_TO_MAT(externalMatrix,mExternalMatrix,externalMatrix_,16);
 }
 float* CameraManager::GetInternalMatrix()
 {
