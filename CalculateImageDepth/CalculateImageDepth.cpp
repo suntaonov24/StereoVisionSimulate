@@ -12,6 +12,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/features2d.hpp>
 #include <vector>
 
 #define ARRAY_TO_4X4MAT(a,b) for (unsigned int i = 0; i < 4; ++i)\
@@ -129,7 +130,7 @@ void CalculateImageDepth::Update()
 		float* externalMatrix_l = (*cameraManager)[0]->GetExternalMatrix();
 		float* internalMatrix_r = (*cameraManager)[1]->GetInternalMatrix();
 		float* externalMatrix_r = (*cameraManager)[1]->GetExternalMatrix();
-		cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
+		/*cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
 		cv::Mat internalMatrix_r_(3, 3, CV_32FC1, internalMatrix_r);
 		cv::Mat distCoeffs_l, distCoeffs_r;
 		cv::Mat rotation_l(3, 3, CV_32FC1);
@@ -207,8 +208,22 @@ void CalculateImageDepth::Update()
 		actor->actor->AddPosition(externalTransform_l->GetPosition());
 		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
 		actor->render->AddActor(actor->actor);
-		actor->renWin->Render();
+		actor->renWin->Render();*/
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();
+}
+
+void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage)
+{
+	//TODO. find corresponding features in left camera and right camera, both of those features are matched with each other.
+}
+
+void CalculateImageDepth::CalculateFundamentalMatrix()
+{
+	//TODO. calculate fundamental matrix.
+}
+void CalculateImageDepth::CalculateHomographyMatrix()
+{
+	//TODO. calculate homography matrix.
 }

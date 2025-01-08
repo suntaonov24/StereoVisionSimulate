@@ -1,5 +1,6 @@
 #include <iostream>
 #include "../CameraModel/RenderingCamera.h"
+#include <opencv2/core.hpp>
 
 
 class __EXPORT_API__ CalculateImageDepth
@@ -22,4 +23,5 @@ private:
 	CameraManager* mRight = nullptr;
 	StereoVision* mStereoVision = nullptr;
 	bool mDebug = false;
+	void ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage );
 };
