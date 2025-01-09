@@ -23,5 +23,7 @@ private:
 	CameraManager* mRight = nullptr;
 	StereoVision* mStereoVision = nullptr;
 	bool mDebug = false;
-	void ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage );
+	static void ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage, bool debug );
+	void CalculateFundamentalMatrix();
+	void CalculateHomographyMatrix();
 };

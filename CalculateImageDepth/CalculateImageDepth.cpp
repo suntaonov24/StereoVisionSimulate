@@ -130,93 +130,40 @@ void CalculateImageDepth::Update()
 		float* externalMatrix_l = (*cameraManager)[0]->GetExternalMatrix();
 		float* internalMatrix_r = (*cameraManager)[1]->GetInternalMatrix();
 		float* externalMatrix_r = (*cameraManager)[1]->GetExternalMatrix();
-		/*cv::Mat internalMatrix_l_(3, 3, CV_32FC1, internalMatrix_l);
-		cv::Mat internalMatrix_r_(3, 3, CV_32FC1, internalMatrix_r);
-		cv::Mat distCoeffs_l, distCoeffs_r;
-		cv::Mat rotation_l(3, 3, CV_32FC1);
-		cv::Mat rotation_r(3, 3, CV_32FC1);
-		cv::Mat rotation_translation_l(4,4,CV_32FC1);
-		cv::Mat rotation_translation_r(4,4,CV_32FC1);
-		ARRAY_TO_4X4MAT(rotation_translation_l, externalMatrix_l);
-		ARRAY_TO_4X4MAT(rotation_translation_r, externalMatrix_r);
-		//Transformation matrix from camera coordinate to world coordinate (inverse of external matrix)
-		rotation_translation_l = rotation_translation_l.inv();
-		rotation_translation_r = rotation_translation_r.inv();
-		cv::Mat rotation_translation_r1 = rotation_translation_r * rotation_translation_l.inv();
-		GetRotationMatrix(rotation_r, rotation_translation_r1);
-		cv::Mat translation(3, 1, CV_32FC1);
-		translation.at<float>(0) = rotation_translation_r.at<float>(0,3)-rotation_translation_l.at<float>(0,3);
-		translation.at<float>(1) = rotation_translation_r.at<float>(1,3)-rotation_translation_l.at<float>(1,3);
-		translation.at<float>(2) = rotation_translation_r.at<float>(2,3)-rotation_translation_l.at<float>(2,3);
-		cv::Size imageSize((*cameraManager)[0]->mParams->ImageSize[0], (*cameraManager)[0]->mParams->ImageSize[1]);
-		cv::Mat R1, R2, P1, P2, Q;
-		cv::stereoRectify(internalMatrix_l_, distCoeffs_l, internalMatrix_r_, distCoeffs_r, imageSize, rotation_r, translation, R1, R2, P1, P2, Q);
-		cv::Mat mapLeftx, mapLefty;
-		cv::initUndistortRectifyMap(internalMatrix_l_, distCoeffs_l, R1, P1, imageSize, CV_32FC1, mapLeftx, mapLefty);
-		cv::Mat mapRightx, mapRighty;
-		cv::initUndistortRectifyMap(internalMatrix_r_, distCoeffs_r, R2, P2, imageSize, CV_32FC1, mapRightx, mapRighty);
-		cv::Mat leftImage_, rightImage_;
-		cv::remap(leftImageFliped, leftImage_, mapLeftx, mapLefty, cv::INTER_LINEAR);
-		cv::remap(rightImageFliped, rightImage_, mapRightx, mapRighty, cv::INTER_LINEAR);
-		leftImageFliped.release();
-		rightImageFliped.release();
-		if (debug)
-		{
-			cv::namedWindow("rectifiedImageLeft");
-			cv::imshow("rectifiedImageLeft", leftImage_);
-			cv::namedWindow("rectifiedImageRight");
-			cv::imshow("rectifiedImageRight", rightImage_);
-		}
-		cv::Ptr<cv::StereoBM> stereo = cv::StereoBM::create(48, 9);
-		cv::Mat disparity;
-		stereo->compute(leftImage_, rightImage_, disparity);
-		disparity = disparity / 16.0;
-		if (debug)
-		{
-			cv::namedWindow("disparity image", cv::WINDOW_FREERATIO);
-			cv::imshow("disparity image", disparity*128);
-			cv::waitKey(0);
-		}
-		cv::Mat reconImage;
-		cv::reprojectImageTo3D(disparity, reconImage, Q);
-		for (unsigned int r = 0; r < reconImage.rows; ++r)
-		{
-			for (unsigned int c = 0; c < reconImage.cols; ++c)
-			{
-				actor->points->InsertNextPoint(reconImage.at<cv::Vec3f>(r, c)[0], reconImage.at<cv::Vec3f>(r, c)[1], -reconImage.at<cv::Vec3f>(r, c)[2]);
-			}
-		}
-		actor->polydata->SetPoints(actor->points);
-		actor->sphere->SetCenter(0, 0, 0);
-		actor->sphere->SetRadius(0.1);
-		actor->glyph3D->SetSourceConnection(actor->sphere->GetOutputPort());
-		actor->glyph3D->SetInputData(actor->polydata);
-		actor->glyph3D->Update();
-		actor->mapper->SetInputConnection(actor->glyph3D->GetOutputPort());
-		actor->actor->SetMapper(actor->mapper);
-		actor->actor->GetProperty()->SetColor(actor->colors->GetColor3d("Salmon").GetData());
-		vtkNew<vtkMatrix4x4> externalMatrix_l_;
-		ARRAY_TO_VTK4X4MATRIX(externalMatrix_l_, externalMatrix_l,4,4);
-		externalMatrix_l_->Invert();
-		vtkNew<vtkMatrix4x4> cameraRectifiedMatrix;
-		cameraRectifiedMatrix->Identity();
-		MAT_TO_VTKMATRIX(cameraRectifiedMatrix, R1,3,3);
-		cameraRectifiedMatrix->Invert();
-		vtkMatrix4x4::Multiply4x4(cameraRectifiedMatrix, externalMatrix_l_, externalMatrix_l_);
-		vtkNew<vtkTransform> externalTransform_l;
-		externalTransform_l->SetMatrix(externalMatrix_l_);
-		actor->actor->AddPosition(externalTransform_l->GetPosition());
-		actor->actor->AddOrientation(externalTransform_l->GetOrientation());
-		actor->render->AddActor(actor->actor);
-		actor->renWin->Render();*/
+		ExtractMatchedFeatures(leftImageFliped,rightImageFliped,debug);
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();
 }
 
-void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage)
+void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage, bool debug)
 {
 	//TODO. find corresponding features in left camera and right camera, both of those features are matched with each other.
+	std::vector<cv::KeyPoint> keyPointsLeft, keyPointsRight;
+	cv::Mat descriptorsLeft, descriptorsRight;
+	cv::Ptr<cv::Feature2D> detector = cv::BRISK::create();
+	detector->detectAndCompute(leftImage,cv::noArray(),keyPointsLeft,descriptorsLeft);
+	detector->detectAndCompute(rightImage,cv::noArray(),keyPointsRight,descriptorsRight);
+	cv::Ptr<cv::DescriptorMatcher> featuresMatcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::BRUTEFORCE_HAMMING);
+	std::vector<std::vector<cv::DMatch>> matches;
+	featuresMatcher->knnMatch(descriptorsLeft, descriptorsRight,matches,2);
+	std::vector<cv::DMatch> goodMatches;
+	for (unsigned int i = 0; i < matches.size(); ++i)
+	{
+		if (matches[i][0].distance < 0.9 * matches[i][1].distance)
+		{
+			goodMatches.push_back(matches[i][0]);
+		}
+	}
+	if (debug)
+	{
+		cv::Mat imageMatches;
+		cv::drawMatches(leftImage,keyPointsLeft,rightImage,keyPointsRight,goodMatches,imageMatches,cv::Scalar::all(-1),
+			cv::Scalar::all(-1),std::vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+		cv::namedWindow("Good Matches' features",cv::WINDOW_FREERATIO);
+		cv::imshow("Good Matches' features",imageMatches);
+		cv::waitKey(0);
+	}
 }
 
 void CalculateImageDepth::CalculateFundamentalMatrix()
