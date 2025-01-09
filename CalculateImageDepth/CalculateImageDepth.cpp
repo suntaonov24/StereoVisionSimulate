@@ -160,6 +160,21 @@ void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& ri
 		cv::Mat imageMatches;
 		cv::drawMatches(leftImage,keyPointsLeft,rightImage,keyPointsRight,goodMatches,imageMatches,cv::Scalar::all(-1),
 			cv::Scalar::all(-1),std::vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+		std::vector<cv::Point2f> leftPoints;
+		std::vector<cv::Point2f> rightPoints;
+		for (unsigned int i = 0; i < goodMatches.size(); ++i)
+		{
+			leftPoints.push_back(keyPointsLeft[goodMatches[i].queryIdx].pt);
+			rightPoints.push_back(keyPointsRight[goodMatches[i].trainIdx].pt);
+		}
+		cv::Mat H = cv::findHomography(leftPoints,rightPoints,cv::RANSAC);
+		std::vector<cv::Point2f> imageRightCorners(4);
+		imageRightCorners[0] = cv::Point2f(0, 0);
+		imageRightCorners[1] = cv::Point2f((float)rightImage.cols, 0);
+		imageRightCorners[2] = cv::Point2f((float)rightImage.cols, (float)rightImage.rows);
+		imageRightCorners[3] = cv::Point2f(0, (float)rightImage.rows);
+		std::vector<cv::Point2f> imageLeftCorners;
+		cv::perspectiveTransform(imageRightCorners,imageLeftCorners,H);
 		cv::namedWindow("Good Matches' features",cv::WINDOW_FREERATIO);
 		cv::imshow("Good Matches' features",imageMatches);
 		cv::waitKey(0);
