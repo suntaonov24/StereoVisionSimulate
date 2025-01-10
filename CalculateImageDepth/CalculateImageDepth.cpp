@@ -130,13 +130,14 @@ void CalculateImageDepth::Update()
 		float* externalMatrix_l = (*cameraManager)[0]->GetExternalMatrix();
 		float* internalMatrix_r = (*cameraManager)[1]->GetInternalMatrix();
 		float* externalMatrix_r = (*cameraManager)[1]->GetExternalMatrix();
-		ExtractMatchedFeatures(leftImageFliped,rightImageFliped,debug);
+		std::vector<cv::Point2f> featuresLeft,featuresRight;
+		ExtractMatchedFeatures(leftImageFliped,rightImageFliped,featuresLeft,featuresRight,debug);
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();
 }
 
-void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage, bool debug)
+void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage, std::vector<cv::Point2f>& featuresLeft,std::vector<cv::Point2f>& featuresRight,bool debug)
 {
 	//TODO. find corresponding features in left camera and right camera, both of those features are matched with each other.
 	std::vector<cv::KeyPoint> keyPointsLeft, keyPointsRight;
@@ -155,37 +156,52 @@ void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& ri
 			goodMatches.push_back(matches[i][0]);
 		}
 	}
+	for (unsigned int i = 0; i < goodMatches.size(); ++i)
+	{
+		featuresLeft.push_back(keyPointsLeft[goodMatches[i].queryIdx].pt);
+		featuresRight.push_back(keyPointsRight[goodMatches[i].trainIdx].pt);
+	}
 	if (debug)
 	{
 		cv::Mat imageMatches;
 		cv::drawMatches(leftImage,keyPointsLeft,rightImage,keyPointsRight,goodMatches,imageMatches,cv::Scalar::all(-1),
 			cv::Scalar::all(-1),std::vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-		std::vector<cv::Point2f> leftPoints;
-		std::vector<cv::Point2f> rightPoints;
-		for (unsigned int i = 0; i < goodMatches.size(); ++i)
-		{
-			leftPoints.push_back(keyPointsLeft[goodMatches[i].queryIdx].pt);
-			rightPoints.push_back(keyPointsRight[goodMatches[i].trainIdx].pt);
-		}
-		cv::Mat H = cv::findHomography(leftPoints,rightPoints,cv::RANSAC);
-		std::vector<cv::Point2f> imageRightCorners(4);
-		imageRightCorners[0] = cv::Point2f(0, 0);
-		imageRightCorners[1] = cv::Point2f((float)rightImage.cols, 0);
-		imageRightCorners[2] = cv::Point2f((float)rightImage.cols, (float)rightImage.rows);
-		imageRightCorners[3] = cv::Point2f(0, (float)rightImage.rows);
-		std::vector<cv::Point2f> imageLeftCorners;
-		cv::perspectiveTransform(imageRightCorners,imageLeftCorners,H);
+		//std::vector<cv::Point2f> leftPoints;
+		//std::vector<cv::Point2f> rightPoints;
+		//for (unsigned int i = 0; i < goodMatches.size(); ++i)
+		//{
+		//	leftPoints.push_back(keyPointsLeft[goodMatches[i].queryIdx].pt);
+		//	rightPoints.push_back(keyPointsRight[goodMatches[i].trainIdx].pt);
+		//}
+		cv::Mat H = cv::findHomography(featuresLeft,featuresRight,cv::RANSAC);
+		std::vector<cv::Point2f> imageLeftCorners(4);
+		imageLeftCorners[0] = cv::Point2f(0, 0);
+		imageLeftCorners[1] = cv::Point2f((float)rightImage.cols, 0);
+		imageLeftCorners[2] = cv::Point2f((float)rightImage.cols, (float)rightImage.rows);
+		imageLeftCorners[3] = cv::Point2f(0, (float)rightImage.rows);
+		std::vector<cv::Point2f> imageRightCorners;
+		cv::perspectiveTransform(imageLeftCorners,imageRightCorners,H);
+		cv::line(imageMatches,imageRightCorners[0]+cv::Point2f(((float)leftImage.cols,0)),
+			imageRightCorners[1]+cv::Point2f((float)leftImage.cols,0),cv::Scalar(0,255,0),4);
+		cv::line(imageMatches,imageRightCorners[1]+cv::Point2f(((float)leftImage.cols,0)),
+			imageRightCorners[2]+cv::Point2f((float)leftImage.cols,0),cv::Scalar(0,255,0),4);
+		cv::line(imageMatches,imageRightCorners[2]+cv::Point2f(((float)leftImage.cols,0)),
+			imageRightCorners[3]+cv::Point2f((float)leftImage.cols,0),cv::Scalar(0,255,0),4);
+		cv::line(imageMatches,imageRightCorners[3]+cv::Point2f(((float)leftImage.cols,0)),
+			imageRightCorners[0]+cv::Point2f((float)leftImage.cols,0),cv::Scalar(0,255,0),4);
+
 		cv::namedWindow("Good Matches' features",cv::WINDOW_FREERATIO);
 		cv::imshow("Good Matches' features",imageMatches);
 		cv::waitKey(0);
 	}
 }
 
-void CalculateImageDepth::CalculateFundamentalMatrix()
+void CalculateImageDepth::CalculateFundamentalMatrix(std::vector<cv::Point2f>& featuresLeft, std::vector<cv::Point2f>& featuresRight,cv::Mat& F )
 {
 	//TODO. calculate fundamental matrix.
+	F = cv::findFundamentalMat(featuresLeft,featuresRight);
 }
-void CalculateImageDepth::CalculateHomographyMatrix()
+void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& H)
 {
 	//TODO. calculate homography matrix.
 }
