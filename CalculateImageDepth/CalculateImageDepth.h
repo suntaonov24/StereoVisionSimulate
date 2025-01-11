@@ -23,7 +23,7 @@ private:
 	CameraManager* mRight = nullptr;
 	StereoVision* mStereoVision = nullptr;
 	bool mDebug = false;
-	static void ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage, bool debug );
-	void CalculateFundamentalMatrix();
-	void CalculateHomographyMatrix();
+	static void ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage,std::vector<cv::Point2f>& featuresLeft,std::vector<cv::Point2f>& featuresRight,bool debug);
+	static void GetEpipolarLines(std::vector<cv::Point2f>& featuresLeft, std::vector<cv::Point2f>& featuresRight,std::vector<cv::Vec3f>& epilinesLeft, std::vector<cv::Vec3f>& epilinesRight,cv::Mat& F, bool debug);
+	static void CalculateHomographyMatrix(cv::Mat& H);
 };

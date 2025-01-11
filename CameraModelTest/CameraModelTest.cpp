@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 	float boardLeftSize[] = {std::stof(argv[8]),std::stof(argv[9])};
 	float boardRightSize[] = { std::stof(argv[10]),std::stof(argv[11]) };
 	calculator.SetBoardSize(boardLeftSize,boardRightSize);
-	float cameraLeftOri[] = { -0.1,-0.05,PI / 180 * 90 };
+	float cameraLeftOri[] = { 0.0,0.0,PI / 180 * 90 };
 	float cameraRightOri[] = {0.2,0,PI / 180 * 90 };
 	calculator.SetCameraOrientation(cameraLeftOri,cameraRightOri);
 	float cameraLeftOffset[] = {50,15};

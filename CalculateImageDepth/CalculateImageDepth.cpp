@@ -1,5 +1,6 @@
 #include "CalculateImageDepth.h"
 #include "../CameraModel/RenderingCamera.h"
+#include <Eigen/Eigen>
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
 #include <vtkArrowSource.h>
@@ -14,6 +15,8 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/features2d.hpp>
 #include <vector>
+
+#define POINT_TO_LINE_DISTANCE(a,b,c,x,y) (a*x+b*y+c)/sqrt(a*a+b*b); 
 
 #define ARRAY_TO_4X4MAT(a,b) for (unsigned int i = 0; i < 4; ++i)\
 		{														\
@@ -132,6 +135,9 @@ void CalculateImageDepth::Update()
 		float* externalMatrix_r = (*cameraManager)[1]->GetExternalMatrix();
 		std::vector<cv::Point2f> featuresLeft,featuresRight;
 		ExtractMatchedFeatures(leftImageFliped,rightImageFliped,featuresLeft,featuresRight,debug);
+		cv::Mat F;
+		std::vector<cv::Vec3f> epilinesLeft, epilinesRight;
+		GetEpipolarLines(featuresLeft, featuresRight, epilinesLeft, epilinesRight,F,debug);
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();
@@ -166,13 +172,6 @@ void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& ri
 		cv::Mat imageMatches;
 		cv::drawMatches(leftImage,keyPointsLeft,rightImage,keyPointsRight,goodMatches,imageMatches,cv::Scalar::all(-1),
 			cv::Scalar::all(-1),std::vector<char>(),cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-		//std::vector<cv::Point2f> leftPoints;
-		//std::vector<cv::Point2f> rightPoints;
-		//for (unsigned int i = 0; i < goodMatches.size(); ++i)
-		//{
-		//	leftPoints.push_back(keyPointsLeft[goodMatches[i].queryIdx].pt);
-		//	rightPoints.push_back(keyPointsRight[goodMatches[i].trainIdx].pt);
-		//}
 		cv::Mat H = cv::findHomography(featuresLeft,featuresRight,cv::RANSAC);
 		std::vector<cv::Point2f> imageLeftCorners(4);
 		imageLeftCorners[0] = cv::Point2f(0, 0);
@@ -196,10 +195,22 @@ void CalculateImageDepth::ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& ri
 	}
 }
 
-void CalculateImageDepth::CalculateFundamentalMatrix(std::vector<cv::Point2f>& featuresLeft, std::vector<cv::Point2f>& featuresRight,cv::Mat& F )
+void CalculateImageDepth::GetEpipolarLines(std::vector<cv::Point2f>& featuresLeft, std::vector<cv::Point2f>& featuresRight,std::vector<cv::Vec3f>& epilinesLeft,std::vector<cv::Vec3f>& epilinesRight, cv::Mat& F, bool debug )
 {
 	//TODO. calculate fundamental matrix.
 	F = cv::findFundamentalMat(featuresLeft,featuresRight);
+	cv::computeCorrespondEpilines(featuresLeft,1,F,epilinesRight);
+	cv::computeCorrespondEpilines(featuresRight,2,F,epilinesLeft);
+	if (debug)
+	{
+		float totalDistance = 0.0;
+		for (unsigned int i = 0; i < featuresLeft.size(); ++i)
+		{
+			totalDistance += POINT_TO_LINE_DISTANCE(epilinesLeft[i][0],epilinesLeft[i][1],epilinesLeft[i][2],featuresLeft[i].x,featuresLeft[i].y);
+			totalDistance += POINT_TO_LINE_DISTANCE(epilinesRight[i][0], epilinesRight[i][1], epilinesRight[i][2],featuresRight[i].x,featuresRight[i].y);
+		}
+		std::cout << "The total error distance is: " << totalDistance <<" pixels." << std::endl;
+	}
 }
 void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& H)
 {
