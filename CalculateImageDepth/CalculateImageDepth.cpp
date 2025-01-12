@@ -138,6 +138,35 @@ void CalculateImageDepth::Update()
 		cv::Mat F;
 		std::vector<cv::Vec3f> epilinesLeft, epilinesRight;
 		GetEpipolarLines(featuresLeft, featuresRight, epilinesLeft, epilinesRight,F,debug);
+		Eigen::Matrix3f F_;
+		F_ << F.at<float>(0, 0), F.at<float>(0, 1), F.at<float>(0, 2),
+			F.at<float>(1, 0), F.at<float>(1, 1), F.at<float>(1, 2),
+			F.at<float>(2, 0), F.at<float>(2, 1), F.at<float>(2, 2);
+		Eigen::EigenSolver<Eigen::Matrix3f> es;
+		es.compute(F_,true);
+		Eigen::Vector3cf values = es.eigenvalues();
+		Eigen::Matrix3cf vectors = es.eigenvectors();
+		if (debug)
+		{
+			std::cout << "Eigen values are: " << values << std::endl;
+			std::cout << "Eigen vectors are: " << vectors << std::endl;
+		}
+		unsigned int maximalIndex = 0;
+		for (unsigned int i = 1; i < 3; ++i)
+		{
+			if (values(i).real() > values(i - 1).real())
+				maximalIndex = i;
+		}
+		Eigen::Vector3f epipolar;
+		epipolar << vectors(0, maximalIndex).real(), vectors(1, maximalIndex).real(), vectors(2, maximalIndex).real();
+		Eigen::Matrix3f epipolarMatrix;
+		epipolarMatrix << 0, -epipolar(2), epipolar(1),
+			epipolar(2), 0, -epipolar(1),
+			-epipolar(1), epipolar(0), 0;
+		if (debug)
+		{
+			std::cout << "The corresponding matrix of epipolar is: " << epipolarMatrix << std::endl;
+		}
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();
