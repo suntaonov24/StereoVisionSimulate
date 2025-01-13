@@ -1,6 +1,5 @@
 #include "CalculateImageDepth.h"
 #include "../CameraModel/RenderingCamera.h"
-#include <Eigen/Eigen>
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
 #include <vtkArrowSource.h>
@@ -167,6 +166,8 @@ void CalculateImageDepth::Update()
 		{
 			std::cout << "The corresponding matrix of epipolar is: " << epipolarMatrix << std::endl;
 		}
+		cv::Mat H(3, 3, CV_32FC1);
+		CalculateHomographyMatrix(leftImage,rightImage,epipolarMatrix,F_,H);
 	};
 	mStereoVision->RegisterCallback(function);
 	mStereoVision->Update();
@@ -241,7 +242,26 @@ void CalculateImageDepth::GetEpipolarLines(std::vector<cv::Point2f>& featuresLef
 		std::cout << "The total error distance is: " << totalDistance <<" pixels." << std::endl;
 	}
 }
-void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& H)
+void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& leftImage, cv::Mat& rightImage, Eigen::Matrix3f& eMat, Eigen::Matrix3f& FMat, cv::Mat& H)
 {
 	//TODO. calculate homography matrix.
+	auto function = [](cv::Mat& image,Eigen::Matrix3f& eMat,Eigen::Matrix3f& A, Eigen::Matrix3f& B) ->void{
+		int width = image.cols;
+		int height = image.rows;
+		Eigen::Matrix3f PPT;
+		PPT << width * width - 1, 0, 0,
+			0, height* height, 0,
+			0, 0, 0;
+		PPT /= (width * height / 12);
+		Eigen::Matrix3f PcPcT;
+		PcPcT << (width - 1) * (width - 1), (width - 1)* (height - 1), 2 * (width - 1),
+			(width - 1)* (height - 1), (height - 1)* (height - 1), 2 * (height - 1),
+			2 * (width - 1), 2 * (height - 1), 4;
+		PcPcT /= 4;
+		A = eMat.transpose() * PPT * eMat;
+		B = eMat.transpose() * PcPcT * eMat;
+	};
+	Eigen::Matrix3f A, B, Ap, Bp;
+	function(leftImage, eMat, A, B);
+	function(rightImage, FMat, Ap, Bp);
 }

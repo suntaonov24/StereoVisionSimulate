@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../CameraModel/RenderingCamera.h"
 #include <opencv2/core.hpp>
+#include <Eigen/Eigen>
 
 
 class __EXPORT_API__ CalculateImageDepth
@@ -25,5 +26,5 @@ private:
 	bool mDebug = false;
 	static void ExtractMatchedFeatures(cv::Mat& leftImage, cv::Mat& rightImage,std::vector<cv::Point2f>& featuresLeft,std::vector<cv::Point2f>& featuresRight,bool debug);
 	static void GetEpipolarLines(std::vector<cv::Point2f>& featuresLeft, std::vector<cv::Point2f>& featuresRight,std::vector<cv::Vec3f>& epilinesLeft, std::vector<cv::Vec3f>& epilinesRight,cv::Mat& F, bool debug);
-	static void CalculateHomographyMatrix(cv::Mat& H);
+	static void CalculateHomographyMatrix(cv::Mat& leftImage,cv::Mat& rightImage,Eigen::Matrix3f& eMat,Eigen::Matrix3f& FMat,cv::Mat& H);
 };
