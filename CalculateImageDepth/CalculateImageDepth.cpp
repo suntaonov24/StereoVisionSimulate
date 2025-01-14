@@ -1,5 +1,7 @@
 #include "CalculateImageDepth.h"
 #include "../CameraModel/RenderingCamera.h"
+#include <Eigen/Cholesky>
+#include <Eigen/Eigenvalues>
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
 #include <vtkArrowSource.h>
@@ -245,7 +247,7 @@ void CalculateImageDepth::GetEpipolarLines(std::vector<cv::Point2f>& featuresLef
 void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& leftImage, cv::Mat& rightImage, Eigen::Matrix3f& eMat, Eigen::Matrix3f& FMat, cv::Mat& H)
 {
 	//TODO. calculate homography matrix.
-	auto function = [](cv::Mat& image,Eigen::Matrix3f& eMat,Eigen::Matrix3f& A, Eigen::Matrix3f& B) ->void{
+	auto GetABParams = [](cv::Mat& image,Eigen::Matrix3f& eMat,Eigen::Matrix3f& A, Eigen::Matrix3f& B) ->void{
 		int width = image.cols;
 		int height = image.rows;
 		Eigen::Matrix3f PPT;
@@ -262,6 +264,22 @@ void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& leftImage, cv::Mat&
 		B = eMat.transpose() * PcPcT * eMat;
 	};
 	Eigen::Matrix3f A, B, Ap, Bp;
-	function(leftImage, eMat, A, B);
-	function(rightImage, FMat, Ap, Bp);
+	GetABParams(leftImage, eMat, A, B);
+	GetABParams(rightImage, FMat, Ap, Bp);
+	auto GetMaximizeZValue = [](Eigen::Matrix3f& A, Eigen::Matrix3f& B)->Eigen::Vector3f {
+		Eigen::LLT<Eigen::Matrix3f> lltOfMatA;
+		Eigen::Matrix3f LOfMatA = lltOfMatA.matrixL().transpose();
+		Eigen::Matrix3f D_TBD_1 = LOfMatA.inverse().transpose() * B * LOfMatA.inverse();
+		Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> es;
+		es.compute(D_TBD_1);
+		Eigen::Vector3f values = es.eigenvalues();
+		Eigen::Matrix3f vectors = es.eigenvectors();
+		unsigned int maxIndex = 0;
+		for (unsigned i = 1; i < 3; ++i)
+		{
+			if (values[i] > values[i - 1])maxIndex = i;
+		}
+		return LOfMatA.inverse()*vectors.col(maxIndex);
+	};
+	Eigen::Vector3f initialZ = GetMaximizeZValue(A,B) + GetMaximizeZValue(Ap,Bp);
 }
