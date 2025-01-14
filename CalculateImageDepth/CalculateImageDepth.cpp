@@ -282,4 +282,7 @@ void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& leftImage, cv::Mat&
 		return LOfMatA.inverse()*vectors.col(maxIndex);
 	};
 	Eigen::Vector3f initialZ = GetMaximizeZValue(A,B) + GetMaximizeZValue(Ap,Bp);
+	auto GetOptimizedZValue = [](Eigen::Matrix3f& A, Eigen::Matrix3f& B, Eigen::Matrix3f& Ap, Eigen::Matrix3f& Bp)->Eigen::Vector3f {
+		return Eigen::Vector3f();
+	};
 }
