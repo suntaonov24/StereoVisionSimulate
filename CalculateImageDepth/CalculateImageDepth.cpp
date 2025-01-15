@@ -281,8 +281,31 @@ void CalculateImageDepth::CalculateHomographyMatrix(cv::Mat& leftImage, cv::Mat&
 		}
 		return LOfMatA.inverse()*vectors.col(maxIndex);
 	};
-	Eigen::Vector3f initialZ = GetMaximizeZValue(A,B) + GetMaximizeZValue(Ap,Bp);
-	auto GetOptimizedZValue = [](Eigen::Matrix3f& A, Eigen::Matrix3f& B, Eigen::Matrix3f& Ap, Eigen::Matrix3f& Bp)->Eigen::Vector3f {
-		return Eigen::Vector3f();
+	Eigen::Vector3f ZValue = GetMaximizeZValue(A,B) + GetMaximizeZValue(Ap,Bp);
+	auto Equation = [&](float x)->float {
+		float a = B(0, 0) * x * x + (B(0, 1) + B(1, 0)) * x + B(1, 1);
+		float b = (2 * x * A(0, 0) + (A(0, 1) + A(1, 0))) * a - (2 * B(0, 0) + (B(0, 1) + B(1, 0))) * (A(0, 0) * x * x + (A(0, 1) + A(1, 0) * x + A(1, 1)));
+		float c = Bp(0, 0) * x * x + (Bp(0, 1) + Bp(1, 0)) * x + Bp(1, 1);
+		float d = (2 * x * Ap(0, 0) + (Ap(0, 1) + Ap(1, 0))) * c - (2 * Bp(0, 0) + (Bp(0, 1) + Bp(1, 0))) * (Ap(0, 0) * x * x + (Ap(0, 1) + Ap(1, 0) * x + Ap(1, 1)));
+		return b/(a*a) + d/(c*c);
 	};
+	auto derivative = [&](float x)->float {
+		float a = B(0, 0) * x * x + (B(0, 1) + B(1, 0)) * x + B(1, 1);
+		float b = (2 * A(0, 0)) * a + (2 * x * A(0, 0) + (A(0, 1) + A(1, 0))) * (2 * B(0, 0) * x + (B(0, 1) + B(1, 0))) - (2 * B(0, 0) + (B(0, 1) + B(1, 0))) * (2 * A(0, 0) * x + (A(0, 1) + A(1, 0)));
+		float c = Bp(0, 0) * x * x + (Bp(0, 1) + Bp(1, 0)) * x + Bp(1, 1);
+		float d = (2 * Ap(0, 0)) * a + (2 * x * Ap(0, 0) + (Ap(0, 1) + Ap(1, 0))) * (2 * Bp(0, 0) * x + (Bp(0, 1) + Bp(1, 0))) - (2 * Bp(0, 0) + (Bp(0, 1) + Bp(1, 0))) * (2 * Ap(0, 0) * x + (Ap(0, 1) + Ap(1, 0)));
+	};
+	auto GetOptimizedZValue = [&](Eigen::Vector3f& x, int iterationNumber)->void {
+		float fx = Equation(x(0));
+		float dfx = derivative(x(0));
+		int iteration = 0;
+		while (abs(fx) > 0.0001 && iteration < iterationNumber)
+		{
+			fx = Equation(x(0) - fx / dfx);
+			dfx = derivative(x(0) - fx / dfx);
+			++iteration;
+		}
+	};
+	GetOptimizedZValue(ZValue, 100);
+	
 }
